@@ -1,1 +1,0 @@
-int convolution(int**, int**, int**, int, int, int); 
