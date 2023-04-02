@@ -1,15 +1,17 @@
 /*
  * Multithread implementantion of convolution
- */ 
+ */
 #include <omp.h>
 
-void convolution(int* output, int* input, int* kernel, int input_rows, int input_columns, int kernel_size)
+void convolution_thread(int* output, int* input, int* kernel, int input_rows, int input_columns, int kernel_size)
 {
     // This holds the convolution results for an index.
     int convolute = 0;
     
     // Used for input matrix index.
     int i, j, x, y, k, l;
+
+    omp_set_num_threads(32);
 
     #pragma omp parallel shared(output, input, kernel, input_rows, input_columns, kernel_size) private(convolute, x, y, i, j, k, l) 
     {

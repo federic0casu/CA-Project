@@ -16,14 +16,14 @@ int set_dimensions(char* image_path, char* kernel_path, char* image_rows, char* 
     FILE* __image = fopen(image_path, "w+");
     if(!__image)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the image file is located in the same directory as conv.c\n", image_path);
+        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", image_path);
         return -1;
     }
 
     FILE* __kernel = fopen(kernel_path, "w+");
     if(!__kernel)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the kernel file is located in the same directory as conv.c\n", kernel_path);
+        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", kernel_path);
         fclose(__image);
         return -1;
     } 
@@ -55,14 +55,14 @@ int get_dimensions(char* image_path, char* kernel_path, int* image_rows, int* im
     FILE* __image = fopen(image_path, "r");
     if(!__image)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the image file is located in the same directory as conv.c\n", image_path);
+        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", image_path);
         return -1;
     }
 
     FILE* __kernel = fopen(kernel_path, "r");
     if(!__kernel)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the kernel file is located in the same directory as conv.c\n", kernel_path);
+        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", kernel_path);
         fclose(__image);
         return -1;
     }
@@ -85,14 +85,14 @@ int read_file(char* image_path, char* kernel_path, int image_rows, int image_col
     FILE* __image = fopen(image_path, "r");
     if(!__image)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the image file is located in the same directory as conv.c\n", image_path);
+        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", image_path);
         return -1;
     }
 
     FILE* __kernel = fopen(kernel_path, "r");
     if(!__kernel)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the kernel file is located in the same directory as conv.c\n", kernel_path);
+        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", kernel_path);
         fclose(__image);
         return -1;
     }
@@ -198,4 +198,15 @@ int write_execution_time(char* file, int rep, double current_exec_time)
     fclose(file_p);
 
     return 0;
+}
+
+void validate(int* out_seq, int* out_thread, int rows, int columns, int rep) 
+{
+    for(unsigned int i = 0; i < rows*columns; i++) 
+        if(out_seq[i] != out_thread[i])
+        {
+            ERROR_("Test %d-th not passed\n", rep)
+        }
+
+    SUCCESS(rep);
 }

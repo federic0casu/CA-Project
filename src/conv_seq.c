@@ -2,7 +2,7 @@
  * Sequential implementantion of convolution
  */ 
 
-void convolution(int* output, int* input, int* kernel, int input_rows, int input_columns, int kernel_size)
+void convolution_seq(int* output, int* input, int* kernel, int input_rows, int input_columns, int kernel_size)
 {
     // This holds the convolution results for an index.
     int convolute = 0;

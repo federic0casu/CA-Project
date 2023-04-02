@@ -24,10 +24,10 @@ int main(int argc, char* argv[])
 
     srand(seed);
 
-    int* img = (int*) malloc((size_t)sizeof(int)*img_rows*img_columns);
+    int* img = (int*) malloc((size_t) sizeof(int)*img_rows*img_columns);
 
     for(int i = 0; i < img_rows*img_columns; i++)
-        *(img + i) = 1;
+        *(img + i) = rand() % 256;
 
     if(write_file(img_path, img, img_rows*img_columns) == -1)
         exit(-1);
@@ -35,10 +35,10 @@ int main(int argc, char* argv[])
     free(img);
     free(img_path);
 
-    int* ker = (int*) malloc((size_t)sizeof(int)*ker_rows*ker_columns);
+    int* ker = (int*) malloc((size_t) sizeof(int)*ker_rows*ker_columns);
 
     for(int i = 0; i < ker_rows*ker_columns; i++)
-        *(ker + i) = 1;
+        *(ker + i) = rand() % 256;
 
     if(write_file(ker_path, ker, ker_rows*ker_columns) == -1)
         exit(-1);
