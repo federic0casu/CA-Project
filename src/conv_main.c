@@ -30,6 +30,10 @@ int main(int argc, char* argv[])
         exit(-1);
     }
 
+    #ifdef DEBUG_0
+    printf("&image.raw_data = %X\n", (unsigned int) image.raw_data);
+    #endif
+
     kernel.raw_data = (int*) malloc(sizeof(int)*kernel.rows*kernel.columns);
     if(!kernel.raw_data)
     {
@@ -37,6 +41,10 @@ int main(int argc, char* argv[])
         free(image.raw_data);
         exit(-1);
     }
+
+    #ifdef DEBUG_0
+    printf("&kernel.raw_data = %X\n", (unsigned int) kernel.raw_data);
+    #endif
 
     if(read_file(image_path, kernel_path, image.rows, image.columns, kernel.rows, kernel.columns, image.raw_data, kernel.raw_data) == -1) 
     {
