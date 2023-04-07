@@ -47,8 +47,8 @@
     printf("+-------------------------------------------+\n");
 
 #define DEBUG_0
-#define TEST
-#define SEQ
+#define SIMULATION
+// #define SEQ
 #define THREAD
 
 struct data
@@ -62,7 +62,7 @@ void print(int *, int, int);
 void validate(int*, int*, int, int, int); 
 
 void convolution_seq(int *, int *, int *, int, int, int);
-void convolution_thread(int *, int *, int *, int, int, int);
+void convolution_thread(int *, int *, int *, int, int, int, int);
 
 int write_file(char *, int *, int);
 int write_execution_time(char *, int, double);

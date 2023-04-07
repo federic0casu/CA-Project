@@ -3,7 +3,7 @@
  */
 #include <omp.h>
 
-void convolution_thread(int* output, int* input, int* kernel, int input_rows, int input_columns, int kernel_size)
+void convolution_thread(int* output, int* input, int* kernel, int input_rows, int input_columns, int kernel_size, int threads)
 {
     // This holds the convolution results for an index.
     int convolute = 0;
@@ -11,7 +11,7 @@ void convolution_thread(int* output, int* input, int* kernel, int input_rows, in
     // Used for input matrix index.
     int i, j, x, y, k, l;
 
-    omp_set_num_threads(32);
+    omp_set_num_threads(threads);
 
     #pragma omp parallel shared(output, input, kernel, input_rows, input_columns, kernel_size) private(convolute, x, y, i, j, k, l) 
     {
@@ -31,7 +31,7 @@ void convolution_thread(int* output, int* input, int* kernel, int input_rows, in
                     {
                         // Convolute here.
                         convolute += kernel[k*kernel_size + l] * input[x*input_columns + y];
-                        //printf("\tTHREAD[%d] -> Computing kernel[%d][%d]*input[%d][%d] = %d\n", omp_get_thread_num(), k, l, x, y, kernel[k*kernel_size + l]*input[x*input_columns + y]);
+                        //printf("\tTHREAD[%d] => Computing kernel[%d][%d]*input[%d][%d] = %d\n", omp_get_thread_num(), k, l, x, y, kernel[k*kernel_size + l]*input[x*input_columns + y]);
 
                         // Move right.
                         y++;
@@ -44,7 +44,7 @@ void convolution_thread(int* output, int* input, int* kernel, int input_rows, in
                 }
                 // Add result to output matrix.
                 output[i*(input_columns - kernel_size + 1) + j] = convolute;
-                //printf("\tTHREAD[%d] -> output[%d][%d] = %d\n", omp_get_thread_num(), i, j, convolute);
+                //printf("\tTHREAD[%d] => output[%d][%d] = %d\n", omp_get_thread_num(), i, j, convolute);
                 
                 // Needed before we move on to the next index.
                 convolute = 0;
