@@ -1,9 +1,5 @@
 #include "utility.hpp"
 
-#ifdef CACHE_TEST
-#include "../cache_sim/src/cache_sim.hpp"
-#endif
-
 int main(int argc, char* argv[])
 { 
     if(argc != 5)
@@ -81,7 +77,7 @@ int main(int argc, char* argv[])
         exit(-1);
     }
 
-    #if defined(SIMULATION) && !defined(CACHE_TEST)
+    #ifdef SIMULATION
     clock_t start, end;
     double execution_time = 0.0;
     start = clock();
@@ -89,7 +85,7 @@ int main(int argc, char* argv[])
 
     #if defined(SEQ) && defined(SIMULATION)
     convolution_seq(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size);
-    #elif defined(THREAD) &&  defined(SIMULATION)
+    #elif defined(THREAD) && defined(SIMULATION)
     convolution_thread(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
     #else // Used to validate multithread convolution
     convolution_seq(output_seq.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size);
@@ -97,17 +93,17 @@ int main(int argc, char* argv[])
     validate(output_seq.raw_data, output_thread.raw_data, output_seq.rows, output_seq.columns, rep);
     #endif
 
-    #if defined(SIMULATION) && !defined(CACHE_TEST)
+    #ifdef SIMULATION
     end = clock();
     execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
     #endif
 
-    #if defined(SEQ) && defined(SIMULATION) && !defined(CACHE_TEST)
+    #if defined(SEQ) && defined(SIMULATION)
     char* file_name = (char*) malloc(sizeof(char)*1024);
     sprintf(file_name, "csv/exec_times(%dx%d_%dx%d)(1).csv", image.rows, image.rows, kernel.rows, kernel.columns);
     write_execution_time(file_name, rep, execution_time);
     free(file_name);
-    #elif defined(THREAD) && defined(SIMULATION) && !defined(CACHE_TEST)
+    #elif defined(THREAD) && defined(SIMULATION)
     char* file_name = (char*) malloc(sizeof(char)*1024);
     sprintf(file_name, "csv/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
     write_execution_time(file_name, rep, execution_time);

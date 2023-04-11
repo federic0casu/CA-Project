@@ -41,7 +41,6 @@
 
 //#define DEBUG
 //#define TEST
-#define CACHE_TEST
 #define SIMULATION
 //#define SEQ
 #define THREAD
