@@ -5,6 +5,8 @@
 #include <stdlib.h>
 #include <pthread.h>
 
+#include <iostream>
+
 #define RED "\033[0;31m"
 #define GREEN "\033[32m"
 #define COLOR_RESET "\e[0m"
@@ -43,7 +45,8 @@
 //#define TEST
 #define SIMULATION
 //#define SEQ
-#define THREAD
+//#define THREAD
+#define PTHREAD
 
 struct data
 {
@@ -53,13 +56,16 @@ struct data
 };
 
 void print(int *, int, int);
-void validate(int*, int*, int, int, int); 
+void validate(int *, int *, int, int, int); 
 
 void convolution_seq(int *, int *, int *, int, int, int);
 void convolution_thread(int *, int *, int *, int, int, int, int);
+void convolution_pthread(int *, int *, int *, int, int, int, int);
 
 int write_file(char *, int *, int);
-int write_execution_time(char *, int, double);
+int read_file(char *, char *, int, int, int, int, int *, int *);
+
 int get_dimensions(char *, char *, int *, int *, int *, int *);
 int set_dimensions(char *, char *, char *, char *, char *, char *);
-int read_file(char *, char *, int, int, int, int, int *, int *);
+
+int write_execution_time(char *, int, double);

@@ -4,7 +4,7 @@
 #include "utility.hpp"
 #include <omp.h>
 
-void convolution_thread(int *output, int *input, int *kernel, int input_rows, int input_columns, int kernel_size, int n_thread) {
+void convolution_thread(int* output, int* input, int* kernel, int input_rows, int input_columns, int kernel_size, int n_thread) {
 
     int out_size_x = input_rows - kernel_size + 1;
     int out_size_y = input_columns - kernel_size + 1;

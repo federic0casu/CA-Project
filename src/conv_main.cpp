@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
     char* kernel_path    = argv[2];
     unsigned int rep     = atoi(argv[3]);
     
-    #ifdef THREAD
+    #if defined(THREAD) || defined(PTHREAD)
     unsigned int threads = atoi(argv[4]); 
     #endif
 
@@ -84,13 +84,27 @@ int main(int argc, char* argv[])
     #endif
 
     #if defined(SEQ) && defined(SIMULATION)
-    convolution_seq(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size);
+    {
+        convolution_seq(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size);
+    }
     #elif defined(THREAD) && defined(SIMULATION)
-    convolution_thread(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
-    #else // Used to validate multithread convolution
-    convolution_seq(output_seq.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size);
-    convolution_thread(output_thread.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
-    validate(output_seq.raw_data, output_thread.raw_data, output_seq.rows, output_seq.columns, rep);
+    {
+        convolution_thread(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
+    }
+    #elif defined(PTHREAD) && defined(SIMULATION)
+    {
+        convolution_pthread(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
+    }
+    #else
+    {   // Used to validate multithread convolution.
+        convolution_seq(output_seq.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size);
+        #ifdef PTHREAD
+        convolution_pthread(output_thread.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
+        #else
+        convolution_thread(output_thread.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
+        #endif
+        validate(output_seq.raw_data, output_thread.raw_data, output_seq.rows, output_seq.columns, rep);
+    }
     #endif
 
     #ifdef SIMULATION
@@ -99,15 +113,29 @@ int main(int argc, char* argv[])
     #endif
 
     #if defined(SEQ) && defined(SIMULATION)
-    char* file_name = (char*) malloc(sizeof(char)*1024);
-    sprintf(file_name, "csv/exec_times(%dx%d_%dx%d)(1).csv", image.rows, image.rows, kernel.rows, kernel.columns);
-    write_execution_time(file_name, rep, execution_time);
-    free(file_name);
+    {
+        char* file_name = (char*) malloc(sizeof(char)*1024);
+        sprintf(file_name, "csv/omp/exec_times(%dx%d_%dx%d)(1).csv", image.rows, image.rows, kernel.rows, kernel.columns);
+        write_execution_time(file_name, rep, execution_time);
+        memset((void*) file_name, 0, sizeof(file_name));
+        sprintf(file_name, "csv/pthread/exec_times(%dx%d_%dx%d)(1).csv", image.rows, image.rows, kernel.rows, kernel.columns);
+        write_execution_time(file_name, rep, execution_time);
+        free(file_name);
+    }
     #elif defined(THREAD) && defined(SIMULATION)
-    char* file_name = (char*) malloc(sizeof(char)*1024);
-    sprintf(file_name, "csv/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
-    write_execution_time(file_name, rep, execution_time);
-    free(file_name);
+    {
+        char* file_name = (char*) malloc(sizeof(char)*1024);
+        sprintf(file_name, "csv/omp/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
+        write_execution_time(file_name, rep, execution_time);
+        free(file_name);
+    }
+    #elif defined(PTHREAD) && defined(SIMULATION)
+    {
+        char* file_name = (char*) malloc(sizeof(char)*1024);
+        sprintf(file_name, "csv/pthread/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
+        write_execution_time(file_name, rep, execution_time);
+        free(file_name);
+    }
     #endif
 
     free(image.raw_data);
