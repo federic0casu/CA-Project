@@ -1,6 +1,7 @@
 /*
  * Multithread implementation of convolution (pthread.h version)
  */
+
 #include "utility.hpp"
 #include <pthread.h>
 
@@ -16,7 +17,7 @@ struct task
 void convolute(void *argument)
 {
     struct task *__task = (struct task*) argument;
-
+    
     auto output      = __task->output;
     auto kernel      = __task->kernel;
     auto input       = __task->input;
@@ -25,10 +26,6 @@ void convolute(void *argument)
     auto out_size_y  = __task->output_columns;
     auto in_size_x   = __task->input_rows;
     auto kernel_size = __task->kernel_size;
-
-    #ifdef DEBUG
-    std::cout << "convolute() => thread[" << pthread_self() << "] - start_row: " << start << ", end_row: " << end << std::endl;
-    #endif
 
     int convolute = 0;
 	
@@ -45,8 +42,6 @@ void convolute(void *argument)
 			convolute = 0;
         }
     }
-
-    pthread_exit(NULL);
 }
 
 void convolution_pthread(int *output, int *input, int *kernel, int input_rows, int input_columns, int kernel_size, int n_thread)

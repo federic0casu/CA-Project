@@ -7,8 +7,8 @@
 
 #include <iostream>
 
-#define RED "\033[0;31m"
-#define GREEN "\033[32m"
+#define RED         "\033[0;31m"
+#define GREEN       "\033[32m"
 #define COLOR_RESET "\e[0m"
 
 #define ERROR(e)        \

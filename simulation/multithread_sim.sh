@@ -11,11 +11,39 @@ do
     ./"conv" input.txt kernel.txt $rep 2
 done
 
+echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 3"
+for rep in {1..100}
+do 
+    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
+    ./"conv" input.txt kernel.txt $rep 3
+done
+
 echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 4"
 for rep in {1..100}
 do 
     ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
     ./"conv" input.txt kernel.txt $rep 4
+done
+
+echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 5"
+for rep in {1..100}
+do 
+    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
+    ./"conv" input.txt kernel.txt $rep 5
+done
+
+echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 6"
+for rep in {1..100}
+do 
+    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
+    ./"conv" input.txt kernel.txt $rep 6
+done
+
+echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 7"
+for rep in {1..100}
+do 
+    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
+    ./"conv" input.txt kernel.txt $rep 7
 done
 
 echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 8"
@@ -25,6 +53,27 @@ do
     ./"conv" input.txt kernel.txt $rep 8
 done
 
+echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 9"
+for rep in {1..100}
+do 
+    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
+    ./"conv" input.txt kernel.txt $rep 9
+done
+
+echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 10"
+for rep in {1..100}
+do 
+    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
+    ./"conv" input.txt kernel.txt $rep 10
+done
+
+echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 11"
+for rep in {1..100}
+do 
+    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
+    ./"conv" input.txt kernel.txt $rep 11
+done
+
 echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 12"
 for rep in {1..100}
 do 
@@ -32,25 +81,32 @@ do
     ./"conv" input.txt kernel.txt $rep 12
 done
 
+echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 13"
+for rep in {1..100}
+do 
+    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
+    ./"conv" input.txt kernel.txt $rep 13
+done
+
+echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 14"
+for rep in {1..100}
+do 
+    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
+    ./"conv" input.txt kernel.txt $rep 14
+done
+
+echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 15"
+for rep in {1..100}
+do 
+    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
+    ./"conv" input.txt kernel.txt $rep 15
+done
+
 echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 16"
 for rep in {1..100}
 do 
     ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
     ./"conv" input.txt kernel.txt $rep 16
-done
-
-echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 24"
-for rep in {1..100}
-do 
-    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
-    ./"conv" input.txt kernel.txt $rep 24
-done
-
-echo "IMAGE: 64x64,     KERNEL: 4x4, THREADS: 32"
-for rep in {1..100}
-do 
-    ./"create_input" input.txt 64 64 kernel.txt 4 4 $rep
-    ./"conv" input.txt kernel.txt $rep 32
 done
 
 #############################################################

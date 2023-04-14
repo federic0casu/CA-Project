@@ -53,16 +53,20 @@ int main(int argc, char* argv[])
     #endif
 
     #ifdef TEST
-    output_seq.rows    = output_thread.rows    = image.rows - kernel.rows + 1;
-    output_seq.columns = output_thread.columns = image.columns - kernel.columns + 1;
+    {
+        output_seq.rows    = output_thread.rows    = image.rows - kernel.rows + 1;
+        output_seq.columns = output_thread.columns = image.columns - kernel.columns + 1;
 
-    output_seq.raw_data    = (int*) malloc(sizeof(int)*output_seq.rows*output_seq.columns);
-    output_thread.raw_data = (int*) malloc(sizeof(int)*output_thread.rows*output_thread.columns);
+        output_seq.raw_data    = (int*) malloc(sizeof(int)*output_seq.rows*output_seq.columns);
+        output_thread.raw_data = (int*) malloc(sizeof(int)*output_thread.rows*output_thread.columns);
+    }
     #else
-    image_f.rows    = image.rows - kernel.rows + 1;
-    image_f.columns = image.columns - kernel.columns + 1;
+    {
+        image_f.rows    = image.rows - kernel.rows + 1;
+        image_f.columns = image.columns - kernel.columns + 1;
 
-    image_f.raw_data = (int*) malloc(sizeof(int)*image_f.rows*image_f.columns);
+        image_f.raw_data = (int*) malloc(sizeof(int)*image_f.rows*image_f.columns);
+    }
     #endif
 
     #ifdef TEST
@@ -77,11 +81,10 @@ int main(int argc, char* argv[])
         exit(-1);
     }
 
-    #ifdef SIMULATION
-    clock_t start, end;
-    double execution_time = 0.0;
+    clock_t start;
+    clock_t end;
+    double execution_time;
     start = clock();
-    #endif
 
     #if defined(SEQ) && defined(SIMULATION)
     {
@@ -107,12 +110,10 @@ int main(int argc, char* argv[])
     }
     #endif
 
-    #ifdef SIMULATION
     end = clock();
     execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
-    #endif
 
-    #if defined(SEQ) && defined(SIMULATION)
+    #if defined(SEQ) && defined(SIMULATION) && !defined(DEBUG)
     {
         char* file_name = (char*) malloc(sizeof(char)*1024);
         sprintf(file_name, "csv/omp/exec_times(%dx%d_%dx%d)(1).csv", image.rows, image.rows, kernel.rows, kernel.columns);
@@ -122,14 +123,14 @@ int main(int argc, char* argv[])
         write_execution_time(file_name, rep, execution_time);
         free(file_name);
     }
-    #elif defined(THREAD) && defined(SIMULATION)
+    #elif defined(THREAD) && defined(SIMULATION) && !defined(DEBUG)
     {
         char* file_name = (char*) malloc(sizeof(char)*1024);
         sprintf(file_name, "csv/omp/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
         write_execution_time(file_name, rep, execution_time);
         free(file_name);
     }
-    #elif defined(PTHREAD) && defined(SIMULATION)
+    #elif defined(PTHREAD) && defined(SIMULATION) && !defined(DEBUG)
     {
         char* file_name = (char*) malloc(sizeof(char)*1024);
         sprintf(file_name, "csv/pthread/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
