@@ -43,6 +43,7 @@
 
 #define PADDING_SIZE 64 - sizeof(int)
 
+//#define VALIDATION
 //#define FALSE_SHARING
 
 struct data
@@ -66,7 +67,8 @@ struct data_aligned
 };
 
 void print(int *, int, int);
-void validate(int *, int *, int, int, int); 
+void validate(int *, int *, int, int, int);
+void validate_FS(int *, raw_data_aligned *, int, int, int);
 
 void convolution_pthread_FS(int *, int *, int *, int, int, int, int);
 void convolution_pthread_NO_FS(raw_data_aligned *, int *, int *, int, int, int, int);

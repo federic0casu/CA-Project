@@ -1,6 +1,6 @@
 #include "utility.hpp"
 
-void print(int* input, int rows, int columns)
+void print(int *input, int rows, int columns)
 {
     for(short i = 0; i < rows; i++)
     {
@@ -11,7 +11,7 @@ void print(int* input, int rows, int columns)
     }
 }
 
-int set_dimensions(char* image_path, char* kernel_path, char* image_rows, char* image_columns, char* kernel_rows, char* kernel_columns)
+int set_dimensions(char *image_path, char *kernel_path, char *image_rows, char *image_columns, char *kernel_rows, char *kernel_columns)
 {
     FILE* __image = fopen(image_path, "w+");
     if(!__image)
@@ -50,7 +50,7 @@ int set_dimensions(char* image_path, char* kernel_path, char* image_rows, char* 
     return 0;
 }
 
-int get_dimensions(char* image_path, char* kernel_path, int* image_rows, int* image_columns, int* kernel_rows, int* kernel_columns)
+int get_dimensions(char *image_path, char *kernel_path, int *image_rows, int *image_columns, int *kernel_rows, int *kernel_columns)
 {
     FILE* __image = fopen(image_path, "r");
     if(!__image)
@@ -80,7 +80,7 @@ int get_dimensions(char* image_path, char* kernel_path, int* image_rows, int* im
     return 0;
 }
 
-int read_file(char* image_path, char* kernel_path, int image_rows, int image_columns, int kernel_rows, int kernel_columns, int* image, int* kernel)
+int read_file(char *image_path, char *kernel_path, int image_rows, int image_columns, int kernel_rows, int kernel_columns, int *image, int *kernel)
 {
     FILE* __image = fopen(image_path, "r");
     if(!__image)
@@ -151,7 +151,7 @@ int read_file(char* image_path, char* kernel_path, int image_rows, int image_col
     return 0;
 }
 
-int write_file(char* file, int* raw_data, int size)
+int write_file(char *file, int *raw_data, int size)
 {
     FILE* file_p = fopen(file, "a+");
 
@@ -169,7 +169,7 @@ int write_file(char* file, int* raw_data, int size)
     return 0;
 }
 
-int write_execution_time(char* file, int rep, double current_exec_time)
+int write_execution_time(char *file, int rep, double current_exec_time)
 {
     FILE* file_p = fopen(file, "a+");
 
@@ -187,10 +187,21 @@ int write_execution_time(char* file, int rep, double current_exec_time)
     return 0;
 }
 
-void validate(int* out_seq, int* out_thread, int rows, int columns, int rep) 
+void validate(int *out_seq, int *out_thread, int rows, int columns, int rep) 
 {
     for(int i = 0; i < rows*columns; i++) 
         if(out_seq[i] != out_thread[i])
+        {
+            ERROR_("Test %d-th not passed\n", rep)
+        }
+
+    SUCCESS(rep);
+}
+
+void validate_FS(int *out_FS, raw_data_aligned *out_NO_FS, int rows, int columns, int rep) 
+{
+    for(int i = 0; i < rows*columns; i++) 
+        if(out_FS[i] != out_NO_FS[i].element)
         {
             ERROR_("Test %d-th not passed\n", rep)
         }

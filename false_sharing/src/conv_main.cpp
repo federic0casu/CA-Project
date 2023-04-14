@@ -43,22 +43,37 @@ int main(int argc, char* argv[])
         exit(-1);
     }
 
-    #ifdef FALSE_SHARING
-    struct data image_f;
-    #else
-    struct data_aligned image_f;
-    #endif
+    #ifndef VALIDATION
+        #ifdef FALSE_SHARING
+            struct data image_f;
+        #else
+            struct data_aligned image_f;
+        #endif
 
-    image_f.rows    = image.rows - kernel.rows + 1;
-    image_f.columns = image.columns - kernel.columns + 1;
+        image_f.rows    = image.rows - kernel.rows + 1;
+        image_f.columns = image.columns - kernel.columns + 1;
 
-    #ifdef FALSE_SHARING
-    image_f.raw_data = (int*) malloc(sizeof(int)*image_f.rows*image_f.columns);
+        #ifdef FALSE_SHARING
+            image_f.raw_data = (int*) malloc(sizeof(int)*image_f.rows*image_f.columns);
+        #else
+            image_f.raw_data = (raw_data_aligned*) malloc(sizeof(raw_data_aligned)*image_f.rows*image_f.columns);
+        #endif
     #else
-    image_f.raw_data = (raw_data_aligned*) malloc(sizeof(raw_data_aligned)*image_f.rows*image_f.columns);
+        struct data output_FS;
+        struct data_aligned output_NO_FS;
+
+        output_FS.rows    = output_NO_FS.rows    = image.rows - kernel.rows + 1;
+        output_FS.columns = output_NO_FS.columns = image.columns - kernel.columns + 1;
+
+        output_FS.raw_data    = (int*) malloc(sizeof(int)*output_FS.rows*output_FS.columns);
+        output_NO_FS.raw_data = (raw_data_aligned*) malloc(sizeof(raw_data_aligned)*output_NO_FS.rows*output_NO_FS.columns);
     #endif
     
+    #ifndef VALIDATION
     if(!image_f.raw_data)
+    #else
+    if(!output_FS.raw_data || !output_NO_FS.raw_data)
+    #endif
     {
         ERROR("Couldn't allocate memory.\n");
         free(image.raw_data);
@@ -66,50 +81,60 @@ int main(int argc, char* argv[])
         exit(-1);
     }
 
-    #ifdef FALSE_SHARING
-    memset((void*) image_f.raw_data, 0, (sizeof(int)*image_f.rows*image_f.columns));
+    #ifndef VALIDATION
+        #ifdef FALSE_SHARING
+            memset((void*) image_f.raw_data, 0, (sizeof(int)*image_f.rows*image_f.columns));
+        #else
+            memset((void*) image_f.raw_data, 0, (sizeof(raw_data_aligned)*image_f.rows*image_f.columns));
+        #endif
     #else
-    memset((void*) image_f.raw_data, 0, (sizeof(raw_data_aligned)*image_f.rows*image_f.columns));
+        memset((void*) output_FS.raw_data, 0, (sizeof(int)*output_FS.rows*output_FS.columns));
+        memset((void*) output_NO_FS.raw_data, 0, (sizeof(raw_data_aligned)*output_NO_FS.rows*output_NO_FS.columns));
     #endif
 
-    clock_t start;
-    clock_t end;
-    double execution_time;
-    start = clock();
+    #ifndef VALIDATION
+        clock_t start;
+        clock_t end;
+        start = clock();
 
+        #ifdef FALSE_SHARING
+            convolution_pthread_FS(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
+        #else
+            convolution_pthread_NO_FS(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
+        #endif
 
-    #ifdef FALSE_SHARING
-    {
-        convolution_pthread_FS(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
-    }
+        end = clock();
+        double execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
     #else
-    {
-        convolution_pthread_NO_FS(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
-    }
+        // Used to validate "false sharing free" implementation.
+        convolution_pthread_FS(output_FS.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
+        convolution_pthread_NO_FS(output_NO_FS.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
+        validate_FS(output_FS.raw_data, output_NO_FS.raw_data, output_FS.rows, output_FS.columns, rep);
     #endif
 
-    end = clock();
-    execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
-
-    #ifdef FALSE_SHARING
-    {
-        char* file_name = (char*) malloc(sizeof(char)*1024);
-        sprintf(file_name, "csv/false_sharing/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
-        write_execution_time(file_name, rep, execution_time);
-        free(file_name);
-    }
-    #else
-    {
-        char* file_name = (char*) malloc(sizeof(char)*1024);
-        sprintf(file_name, "csv/NO_false_sharing/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
-        write_execution_time(file_name, rep, execution_time);
-        free(file_name);
-    }
+    #ifndef VALIDATION
+        #ifdef FALSE_SHARING
+            char* file_name = (char*) malloc(sizeof(char)*1024);
+            sprintf(file_name, "csv/false_sharing/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
+            write_execution_time(file_name, rep, execution_time);
+            free(file_name);
+        #else
+            char* file_name = (char*) malloc(sizeof(char)*1024);
+            sprintf(file_name, "csv/NO_false_sharing/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
+            write_execution_time(file_name, rep, execution_time);
+            free(file_name);
+        #endif
     #endif
 
     free(image.raw_data);
     free(kernel.raw_data);
-    free(image_f.raw_data);
+
+    #ifndef VALIDATION
+        free(image_f.raw_data);
+    #else
+        free(output_FS.raw_data);
+        free(output_NO_FS.raw_data);
+    #endif
 
     exit(0);    
 }
