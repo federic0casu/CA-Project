@@ -97,10 +97,6 @@ int read_file(char* image_path, char* kernel_path, int image_rows, int image_col
         return -1;
     }
 
-    #ifdef DEBUG
-    printf("START OF IMAGE LOADING...\n");
-    #endif
-
     int i = 0;
     while(!feof(__image))
     {
@@ -127,11 +123,6 @@ int read_file(char* image_path, char* kernel_path, int image_rows, int image_col
 
     fclose(__image);
 
-    #ifdef DEBUG
-    printf("END OF IMAGE LOADING\n");
-    printf("START OF KERNEL LOADING...\n");
-    #endif
-
     i = 0;
     while(!feof(__kernel))
     {
@@ -156,10 +147,6 @@ int read_file(char* image_path, char* kernel_path, int image_rows, int image_col
     }
 
     fclose(__kernel);
-
-    #ifdef DEBUG
-    printf("END OF KERNEL LOADING\n");
-    #endif
 
     return 0;
 }

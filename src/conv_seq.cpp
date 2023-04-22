@@ -4,39 +4,23 @@
 
 void convolution_seq(int* output, int* input, int* kernel, int input_rows, int input_columns, int kernel_size)
 {
-    // This holds the convolution results for an index.
-    int convolute = 0;
-    
-    // Used for input matrix index.
-    int x, y;
+    // This holds the convolution results.
+    int convolute;
 
 	// Fill output matrix: rows and columns are i and j respectively.
-	for (int i = 0; i < (input_rows - kernel_size + 1); i++)
+	for (auto x = 0; x < (input_rows - kernel_size + 1); x++)
 	{
-		for (int j = 0; j < (input_columns - kernel_size + 1); j++)
+		for (auto y = 0; y < (input_columns - kernel_size + 1); y++)
 		{
-			x = i;
-			y = j;
-
-			// Kernel rows and columns are k and l respectively.
-			for (int k = 0; k < kernel_size; k++)
+			// Kernel rows and columns are kx and ky respectively.
+			for (int kx = 0; kx < kernel_size; kx++)
 			{
-				for (int l = 0; l < kernel_size; l++)
-				{
+				for (int ky = 0; ky < kernel_size; ky++)
 					// Convolute here.
-					convolute += kernel[k*kernel_size + l] * input[x*input_columns + y];
-					
-                    // Move right.
-                    y++;
-				}
-                // Move down.
-				x++; 
-
-                // Restart column position
-				y = j;
+					convolute += (input[(x + kx) * input_columns + (y + ky)] * kernel[kx * kernel_size + ky]);
 			}
             // Add result to output matrix.
-			output[i*(input_columns - kernel_size + 1) + j] = convolute;
+			output[x*(input_columns - kernel_size + 1) + y] = convolute;
 			
             // Needed before we move on to the next index.
             convolute = 0;

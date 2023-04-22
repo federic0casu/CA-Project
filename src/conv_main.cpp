@@ -10,7 +10,10 @@ int main(int argc, char* argv[])
 
     char* image_path     = argv[1];
     char* kernel_path    = argv[2];
+
+    #ifndef DEBUG
     unsigned int rep     = atoi(argv[3]);
+    #endif
     
     #if defined(THREAD) || defined(PTHREAD)
     unsigned int threads = atoi(argv[4]); 
@@ -81,10 +84,10 @@ int main(int argc, char* argv[])
         exit(-1);
     }
 
-    clock_t start;
-    clock_t end;
-    double execution_time;
-    start = clock();
+    #ifndef DEBUG
+    // Start measuring time
+    auto begin = std::chrono::high_resolution_clock::now();
+    #endif
 
     #if defined(SEQ) && defined(SIMULATION)
     {
@@ -110,30 +113,34 @@ int main(int argc, char* argv[])
     }
     #endif
 
-    end = clock();
-    execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
+
+    #ifndef DEBUG
+    // Stop measuring time and calculate the execution time
+    auto end = std::chrono::high_resolution_clock::now();
+    auto execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count() * 1e-9;
+    #endif
 
     #if defined(SEQ) && defined(SIMULATION) && !defined(DEBUG)
     {
         char* file_name = (char*) malloc(sizeof(char)*1024);
-        sprintf(file_name, "csv/omp/exec_times(%dx%d_%dx%d)(1).csv", image.rows, image.rows, kernel.rows, kernel.columns);
+        sprintf(file_name, "../csv/omp/exec_times(%dx%d_%dx%d)(1).csv", image.rows, image.rows, kernel.rows, kernel.columns);
         write_execution_time(file_name, rep, execution_time);
         memset((void*) file_name, 0, sizeof(file_name));
-        sprintf(file_name, "csv/pthread/exec_times(%dx%d_%dx%d)(1).csv", image.rows, image.rows, kernel.rows, kernel.columns);
+        sprintf(file_name, "../csv/pthread/exec_times(%dx%d_%dx%d)(1).csv", image.rows, image.rows, kernel.rows, kernel.columns);
         write_execution_time(file_name, rep, execution_time);
         free(file_name);
     }
     #elif defined(THREAD) && defined(SIMULATION) && !defined(DEBUG)
     {
         char* file_name = (char*) malloc(sizeof(char)*1024);
-        sprintf(file_name, "csv/omp/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
+        sprintf(file_name, "../csv/omp/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
         write_execution_time(file_name, rep, execution_time);
         free(file_name);
     }
     #elif defined(PTHREAD) && defined(SIMULATION) && !defined(DEBUG)
     {
         char* file_name = (char*) malloc(sizeof(char)*1024);
-        sprintf(file_name, "csv/pthread/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
+        sprintf(file_name, "../csv/pthread/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
         write_execution_time(file_name, rep, execution_time);
         free(file_name);
     }

@@ -6,6 +6,7 @@
 #include <pthread.h>
 
 #include <iostream>
+#include <chrono>
 
 #define RED         "\033[0;31m"
 #define GREEN       "\033[32m"
@@ -41,12 +42,14 @@
         return;                                                \
     }
 
-//#define DEBUG
+#define DEBUG
 //#define TEST
 #define SIMULATION
 //#define SEQ
 //#define THREAD
 #define PTHREAD
+
+#define OPT_L1
 
 struct data
 {

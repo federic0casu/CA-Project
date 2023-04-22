@@ -6,6 +6,7 @@
 #include <pthread.h>
 
 #include <iostream>
+#include <chrono>
 
 #define RED         "\033[0;31m"
 #define GREEN       "\033[32m"
@@ -41,10 +42,10 @@
         return;                                                \
     }
 
-#define PADDING_SIZE 64 - sizeof(int)
+#define ALIGNMENT 64
 
 //#define VALIDATION
-//#define FALSE_SHARING
+#define FALSE_SHARING
 
 struct data
 {
@@ -55,8 +56,7 @@ struct data
 
 struct raw_data_aligned
 {
-    int element;
-    unsigned char padding[PADDING_SIZE];
+    alignas(ALIGNMENT) int element;
 };
 
 struct data_aligned

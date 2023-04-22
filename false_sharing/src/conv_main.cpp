@@ -93,9 +93,8 @@ int main(int argc, char* argv[])
     #endif
 
     #ifndef VALIDATION
-        clock_t start;
-        clock_t end;
-        start = clock();
+        // Start measuring time
+        auto begin = std::chrono::high_resolution_clock::now();
 
         #ifdef FALSE_SHARING
             convolution_pthread_FS(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
@@ -103,8 +102,9 @@ int main(int argc, char* argv[])
             convolution_pthread_NO_FS(image_f.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
         #endif
 
-        end = clock();
-        double execution_time = ((double)(end - start))/CLOCKS_PER_SEC;
+        // Stop measuring time and calculate the execution time
+        auto end = std::chrono::high_resolution_clock::now();
+        auto execution_time = std::chrono::duration_cast<std::chrono::nanoseconds>(end - begin).count() * 1e-9;
     #else
         // Used to validate "false sharing free" implementation.
         convolution_pthread_FS(output_FS.raw_data, image.raw_data, kernel.raw_data, image.rows, image.columns, kernel_size, threads);
@@ -115,12 +115,12 @@ int main(int argc, char* argv[])
     #ifndef VALIDATION
         #ifdef FALSE_SHARING
             char* file_name = (char*) malloc(sizeof(char)*1024);
-            sprintf(file_name, "csv/false_sharing/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
+            sprintf(file_name, "../csv/false_sharing/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
             write_execution_time(file_name, rep, execution_time);
             free(file_name);
         #else
             char* file_name = (char*) malloc(sizeof(char)*1024);
-            sprintf(file_name, "csv/NO_false_sharing/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
+            sprintf(file_name, "../csv/NO_false_sharing/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
             write_execution_time(file_name, rep, execution_time);
             free(file_name);
         #endif
