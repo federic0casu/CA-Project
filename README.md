@@ -666,3 +666,19 @@ _Z13convolute_optPv:                # void* convolute_opt(void*)
 	ret
 	.cfi_endproc
 ```
+
+Let's compile and run the optimized code (I think that the code should perfom better than the previous one. We will see it...):
+
+```console
+$ g++ -o conv -lpthread -Wall conv_main.cpp conv_pthread.cpp utility.cpp convolute_opt.s 
+$ sudo perf stat -r 30 -e cache-references,cache-misses ./conv image.txt kernel.txt 0 2
+
+ Performance counter stats for './conv image.txt kernel.txt 0 2' (30 runs):
+
+         6.776.719      cache-references                                              ( +-  1,27% )
+           470.948      cache-misses              #    6,794 % of all cache refs      ( +-  2,12% )
+
+           0,41677 +- 0,00182 seconds time elapsed  ( +-  0,44% )
+```
+
+In the first simulation we obtained 1.768.478 cache misses. Now we have just obtained 470.948 cache misses: not so bad.
