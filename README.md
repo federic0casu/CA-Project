@@ -226,7 +226,7 @@ Overhead  Command  Shared Object                                        Symbol
    0,78%  conv     /proc/kcore                                          0xffffffff991431a5 k [k] handle_pte_fault
 ```
 
-`perf report` ranks functions based on the number of collected samples of the event under analysis (the higher the number of samples the higher the function is ranked). By going up and down with arrow keys and then pressing Enter (or 'a'), we can select the function we want to analyze. Example: we want to understand why the function `convolute(void*)` is responsible for the 23,02% of cache references (roughly 6.533.937 cache references out of a total of 28.383.742):
+`perf report` ranks functions based on the number of collected samples of the event under analysis (the higher the number of samples the higher the function is ranked). By going up and down with arrow keys and then pressing Enter (or 'a'), we can select the function we want to analyze. Example: we want to understand why the function `convolute(void*)` is responsible for the 23,02% of the total cache references samples (so `convolute(void*)` is likely to be the **hottest function** of our program with respect to cache references:
 
 ```console
 Samples: 10K of event 'cache-references', 4000 Hz, Event count (approx.): 36665484
