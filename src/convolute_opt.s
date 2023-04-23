@@ -10,6 +10,8 @@
 #       - %e14 = kx
 #       - %e15 = ky
 
+.global _Z13convolute_optPv:
+
 _Z13convolute_optPv:                # void* convolute_opt(void*)
 .LFB2422:
         .cfi_startproc
