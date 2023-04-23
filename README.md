@@ -226,7 +226,16 @@ Overhead  Command  Shared Object                                        Symbol
    0,78%  conv     /proc/kcore                                          0xffffffff991431a5 k [k] handle_pte_fault
 ```
 
-`perf report` ranks functions based on the number of collected samples of the event under analysis (the higher the number of samples the higher the function is ranked). By going up and down with arrow keys and then pressing Enter (or 'a'), we can select the function we want to analyze. Example: we want to understand why the function `convolute(void*)` is responsible for the 23,02% of the total cache references samples (so `convolute(void*)` is likely to be the **hottest function** of our program with respect to cache references:
+`perf report` ranks functions based on the number of collected samples of the event under analysis (the higher the number of samples the higher the function is ranked). It is possible to customize the sorting order and therefore to view the data differently. The column 'Overhead' indicates the percentage of the overall samples collected in the corresponding function. The second column reports the process from which the samples were collected. The third column shows the name of the ELF image where the samples came from. If a program is dynamically linked, then this may show the name of a shared library. The fourth column indicates the privilege level at which the sample was taken, i.e. when the program was running when it was interrupted:
+- \[.\]: user lever
+- \[k\]: kernel
+- \[g\]: guest kernel level (virtualization)
+- \[u\]: guest os user space
+- \[H\]: hypervisor
+
+The final column shows the symbol name.
+
+By going up and down with arrow keys and then pressing Enter (or 'a'), we can select the function we want to analyze. Example: we want to understand why the function `convolute(void*)` is responsible for the 23,02% of the total cache references samples (so `convolute(void*)` is likely to be the **hottest function** of our program with respect to cache references:
 
 ```console
 Samples: 10K of event 'cache-references', 4000 Hz, Event count (approx.): 36665484
@@ -253,6 +262,8 @@ convolute(void*)  /home/federico/Documents/CA-Project/simulation/conv [Percent: 
  10,79 │1c1f:   add     %rcx,%rax
   0,03 │1c22:   mov     (%rax),%eax
 ```
+
+Each instruction have its relative percentage of samples reported (first column). 
 
 We can find the **hottest instruction** by pressing 'H'. Also, we can cycle through the hottest instructions by pressing TAB. In `convolute(void*)` the hottest instructions are the following:
 
