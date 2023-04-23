@@ -145,7 +145,7 @@ $ sudo perf stat -r 30 -e cache-references,cache-misses ./conv img.txt ker.txt 0
            2,37044 +- 0,00781 seconds time elapsed  ( +-  0,33% )
 ```
 
-## How to do performance analysis, with countercocks aka controcazzi, with `perf`
+## How to improve perfomance with `perf`
 
 The answer is perf record:
 
