@@ -1,17 +1,15 @@
-# convolute_opt.s
-#
-# struct task {			    // offset
-#	int *output;		    // 0
-#   int *input;			    // +8	
-# 	int *kernel;		    // +16
-#   int start_row;		    // +24
-#	int end_row;		    // +28
-#	int output_columns;	    // +32
-#   int input_rows;		    // +36
-#	int kernel_size;	    // +40
-# };
-#
-#
+# Optimizations:
+# __task will not be used before the inizialization of variables
+#       - output, input, kernel
+#       - start, end
+#       - out_size_y, in_size_x, kernel_size
+# Also, we can use registers to hold variables (instead of allocating stack memory):
+#       - %ebx = convolute     
+#       - %e12 = x
+#       - %e13 = y
+#       - %e14 = kx
+#       - %e15 = ky
+
 _Z13convolute_optPv:                # void* convolute_opt(void*)
 .LFB2422:
         .cfi_startproc
@@ -44,88 +42,88 @@ _Z13convolute_optPv:                # void* convolute_opt(void*)
         push    %r14                # Saving %r14 (%r14 is a callee-saved register)
         push    %r15                # Saving %r15 (%r15 is a callee-saved register)
         xor 	%rbx, %rbx          # %rbx = convolute = 0
-        movl	-52(%rbp), %eax		# %eax = start
+        movl	-52(%rbp), %eax	    # %eax = start
         cltq                        
-	    movq	%rax, %r12          # %r12 = x = start
-	    jmp	.L5
-	.L12:    
+	movq	%rax, %r12          # %r12 = x = start
+	jmp	.L5
+.L12:    
         xor     %r13, %r13          # %r13 = y = 0
         jmp .L6
-	.L11:
+.L11:
         xor     %r14, %r14          # %r14 = kx = 0
         jmp	.L7
-	.L10:
-	    xor     %r15, %r15          # %r15 = ky = 0
+.L10:
+	xor     %r15, %r15          # %r15 = ky = 0
         jmp .L8
-	.L9:
+.L9:
         movq    %r12, %rcx          # %rcx = x 
-	    add     %r14, %rcx          # %rcx = x + kx
+	add     %r14, %rcx          # %rcx = x + kx
         movl    -40(%rbp), %eax     # %eax = in_size_x
         cltq
-        imul	%rcx, %rax		    # %rax = (x + kx) * in_size_x
-	    movq	%r13, %rcx		    # %rcx = y
-        movq	%r15, %rdx  		# %rdx = ky
-        addq	%rcx, %rdx			# %rdx = y + ky
-        addq	%rdx, %rax			# %rax = (x + kx) * in_size_x + (y + ky)
-        leaq	0(,%rax,4), %rdx	# %rdx = %rax * 4
-	    movq	-8(%rbp), %rax		# %rax = &input[0]
+        imul	%rcx, %rax          # %rax = (x + kx) * in_size_x
+	movq	%r13, %rcx          # %rcx = y
+        movq	%r15, %rdx          # %rdx = ky
+        addq	%rcx, %rdx	    # %rdx = y + ky
+        addq	%rdx, %rax	    # %rax = (x + kx) * in_size_x + (y + ky)
+        leaq	0(,%rax,4), %rdx    # %rdx = %rax * 4
+	movq	-8(%rbp), %rax	    # %rax = &input[0]
         addq	%rdx, %rax          # %rax = &input[(x + kx) * in_size_x + (y + ky)]
-	    movl	(%rax), %edx		# %edx = input[(x + kx) * in_size_x + (y + ky)]
-	    movq	%r14, %rcx	    	# %rcx = kx
+	movl	(%rax), %edx	    # %edx = input[(x + kx) * in_size_x + (y + ky)]
+	movq	%r14, %rcx	    # %rcx = kx
         movl    -36(%rbp), %eax     # %eax = kernel_size
         cltq
-	    imul	%rcx, %rax		    # %rax = kx * kernel_size
-	    movq	%rax, %rcx			# %rcx = kx * kernel_size
-	    movq	%r15, %rax  		# %rax = ky
-	    addq	%rcx, %rax			# %rax = kx * kernel_size + ky
-	    leaq	0(,%rax,4), %rcx	# rcx = %rax * 4
-	    movq	-16(%rbp), %rax		# %rax = &kernel[0]
-	    addq	%rcx, %rax			# %rax = &kernel[kx * kernel_size + ky]
-	    movl	(%rax), %eax		# %eax = kernel[kx * kernel_size + ky]
+	imul	%rcx, %rax          # %rax = kx * kernel_size
+	movq	%rax, %rcx	    # %rcx = kx * kernel_size
+	movq	%r15, %rax  	    # %rax = ky
+	addq	%rcx, %rax	    # %rax = kx * kernel_size + ky
+	leaq	0(,%rax,4), %rcx    # rcx = %rax * 4
+	movq	-16(%rbp), %rax	    # %rax = &kernel[0]
+	addq	%rcx, %rax	    # %rax = &kernel[kx * kernel_size + ky]
+	movl	(%rax), %eax	    # %eax = kernel[kx * kernel_size + ky]
         imull	%edx, %eax          # %eax = input[(x + kx) * in_size_x + (y + ky)] * kernel[kx * kernel_size + ky]
-	    addl	%eax, %ebx          # %ebx += %eax (convolute += %eax)
-	    addq    $1, %r15            # ky++
-	.L8:
+	addl	%eax, %ebx          # %ebx += %eax (convolute += %eax)
+	addq    $1, %r15            # ky++
+.L8:
         movl    -36(%rbp), %eax
         cltq
-	    cmpq	%rax, %r15  		# ky < kernel_size
-	    jl	.L9 
-        addq	$1, %r14    		# kx++
-	.L7:
+	cmpq	%rax, %r15  	    # ky < kernel_size
+	jl	.L9 
+        addq	$1, %r14    	    # kx++
+.L7:
         movl    -36(%rbp), %eax
         cltq
-	    cmpq	%rax, %r14	    	# kx < kernel_size
+	cmpq	%rax, %r14	    # kx < kernel_size
         jl	.L10
-        movq	%r12, %rax  		# %rax = x
+        movq	%r12, %rax  	    # %rax = x
         movslq  -44(%rbp), %rcx     # %rcx out_size_y
-	    imulq	%rcx, %rax	    	# %rax = x * out_size_y
-        movq	%rax, %rdx			# %rdx = x * out_size_y
-	    movq	%r13, %rax  		# %rax = y
-        addq	%rdx, %rax			# %rax = x * out_size_y + y	
-        leaq	0(,%rax,4), %rdx	# %rdx = %rax * 4
-	    movq	-24(%rbp), %rax		# %rax = &output[0]
-        addq	%rax, %rdx			# %rdx = &output[x * out_size_y + y]
-	    movl	%ebx, (%rdx)		# output[x * out_size_y + y] = convolute;
-	    xorl    %ebx, %ebx          # convolute = 0
-	    addq	$1, %r13    		# y++
-	.L6:
+	imulq	%rcx, %rax	    # %rax = x * out_size_y
+        movq	%rax, %rdx	    # %rdx = x * out_size_y
+	movq	%r13, %rax  	    # %rax = y
+        addq	%rdx, %rax	    # %rax = x * out_size_y + y	
+        leaq	0(,%rax,4), %rdx    # %rdx = %rax * 4
+	movq	-24(%rbp), %rax	    # %rax = &output[0]
+        addq	%rax, %rdx	    # %rdx = &output[x * out_size_y + y]
+	movl	%ebx, (%rdx)	    # output[x * out_size_y + y] = convolute;
+	xorl    %ebx, %ebx          # convolute = 0
+	addq	$1, %r13    	    # y++
+.L6:
         movl    -44(%rbp), %eax     # %eax = out_size_y
         cltq
-	    cmpq	%rax, %r13  		# y < out_size_y
-	    jl      .L11
-	    addq	$1, %r12    		# x++
-	.L5:
+	cmpq	%rax, %r13  	    # y < out_size_y
+	jl      .L11
+	addq	$1, %r12    	    # x++
+.L5:
         movl    -48(%rbp), %eax     # %eax = end
         cltq
-	    cmpq	%rax, %r12          # x < end
-	    jl	.L12
+	cmpq	%rax, %r12          # x < end
+	jl	.L12
         popq %r15
         popq %r14
         popq %r13
-	    popq %r12
-	    popq %rbx
+	popq %r12
+	popq %rbx
         movq %rbp, %rsp 
-	    popq %rbp
-	    .cfi_def_cfa 7, 8
-	    ret
-	    .cfi_endproc
+	popq %rbp
+	.cfi_def_cfa 7, 8
+	ret
+	.cfi_endproc

@@ -1,4 +1,4 @@
-# How to do a perfomance analisys with perf
+# How to do a performance analisys with perf
 
 
 ## 1 - Install `perf`
@@ -385,167 +385,166 @@ $ objdump -d conv
 Actually, at first glance, it's impossible to figure out what this assembly code is doing. After an hour I was able to figure out the meaning of each instruction. The result is the following:
 
 ```assembly
-# convolute.s
-
-
-# struct task {			    // offset
-#	int *output;		    // 0
-#   int *input;			    // +8	
-# 	int *kernel;		    // +16
-#   int start_row;		    // +24
-#	int end_row;		    // +28
-#	int output_columns;	    // +32
-#   int input_rows;		    // +36
-#	int kernel_size;	    // +40
+#
+# struct task {			// offset
+#	int *output;		// 0
+#   int *input;			// +8	
+# 	int *kernel;		// +16
+#   int start_row;		// +24
+#	int end_row;		// +28
+#	int output_columns;	// +32
+#   int input_rows;		// +36
+#	int kernel_size;	// +40
 # };
-
+#
 
 _Z9convolutePv:
 .LFB2422:
-    .cfi_startproc              #                                                   | Possible optimizations:
-	endbr64                     #                                                   | __task will not be used before the inizialization of variables
-	pushq	%rbp                #                                                   |   - output, input, kernel
-	.cfi_def_cfa_offset 16      # ABI standard prologue                             |   - start, end
-	.cfi_offset 6, -16          #                                                   |   - out_size_y, in_size_x, kernel_size
-	movq	%rsp, %rbp          #                                                   | Also, we can use registers to hold variables (instead of allocating
-    .cfi_def_cfa_register 6     #                                                   | stack memory):
-	                            #                                                   |   - %ebx = convolute     
-                                #                                                   |   - %e12 = x
-                                #                                                   |   - %e13 = y
-                                #                                                   |   - %e14 = kx
-                                #                                                   |   - %e15 = ky
-                                #                                                   | The code can be rewritten as follows
-                                #                                                   |
-	movq	%rdi, -88(%rbp)     #                                                   | _Z9convolutePv: 
-	movq	-88(%rbp), %rax	    #                                                   | .LFB2422:
-	movq	%rax, -32(%rbp)		# struct task *__task = (struct task *)argument;    |       .cfi_startproc   
-                                # -32(%rbp) = __task                                |       endbr64
-	movq	-32(%rbp), %rax     #                                                   |       pushq	%rbp                      
-	movq	(%rax), %rax        #                                                   |       .cfi_def_cfa_offset 16      
-	movq	%rax, -24(%rbp)		# auto output = __task->output;                     |       .cfi_offset 6, -16
-                                # -24(%rbp) = &output[0]                            |       movq	%rsp, %rbp      
-                                #                                                   |       subq    $0x80, %rsp         # Stack must be aligned at 16 bytes 
-	movq	-32(%rbp), %rax		#                                                   |       .cfi_def_cfa_register 6
-	movq	16(%rax), %rax      #                                                   |       movq	(%rdi), %rax
-	movq	%rax, -16(%rbp)		# auto kernel = __task->kernel;                     |       movq	%rax, -24(%rbp)     # -24(%rbp) = &output[0]
-                                # -16(%rbp) = &kernel[0]                            |       movq	16(%rdi), %rax
-	movq	-32(%rbp), %rax     #                                                   |       movq	%rax, -16(%rbp)     # -16(%rbp) = &kernel[0]
-	movq	8(%rax), %rax       #                                                   |       movq	8(%rdi), %rax
-	movq	%rax, -8(%rbp)		# auto input = __task->input;                       |       movq	%rax, -8(%rbp)      # -8(%rbp) = &input[0]
-                                # -8(%rbp) = &input[0]                              |       movl	24(%rdi), %eax
-	movq	-32(%rbp), %rax     #                                                   |       movl	%eax, -52(%rbp)     # -52(%rbp) = start
-	movl	24(%rax), %eax      #                                                   |       movl	28(%rdi), %eax
-	movl	%eax, -52(%rbp)		# auto start = __task->start_row;                   |       movl	%eax, -48(%rbp)     # -48(%rbp) = end 
-                                # -52(%rbp) = start                                 |       movl	32(%rdi), %eax
-	movq	-32(%rbp), %rax     #                                                   |       movl	%eax, -44(%rbp)     # -44(%rbp) = out_size_y 
-	movl	28(%rax), %eax      #                                                   |       movl	36(%rdi), %eax
-	movl	%eax, -48(%rbp)		# auto end = __task->end_row;                       |       movl	%eax, -40(%rbp)     # -40(%rbp) = in_size_x    
-                                # -48(%rbp) = end                                   |       movl	40(%rdi), %eax
-	movq	-32(%rbp), %rax     #                                                   |       movl	%eax, -36(%rbp)     # -36(%rbp) = kernel_size
-	movl	32(%rax), %eax      #                                                   |       pushq   %rbx                # Saving %rbx (%rbx is a callee-saved register)
-	movl	%eax, -44(%rbp)		# auto out_size_y  = __task->output_columns;        |       pushq   %r12                # Saving %r12 (%r12 is a callee-saved register)
-                                # -44(%rbp) = out_size_y                            |       pushq   %r13                # Saving %r13 (%r13 is a callee-saved register)
-	movq	-32(%rbp), %rax     #                                                   |       pushq   %r14                # Saving %r14 (%r14 is a callee-saved register)
-	movl	36(%rax), %eax      #                                                   |       pushq   %r15                # Saving %r15 (%r15 is a callee-saved register)
-	movl	%eax, -40(%rbp)		# auto in_size_x   = __task->input_rows;            |       xorl	%ebx, %ebx          # %ebx = convolute = 0
-                                # -40(%rbp) = in_size_x                             |       movl	-52(%rbp), %eax		# %eax = start
-	movq	-32(%rbp), %rax     #                                                   |       movl	%eax, %e12          # %e12 = x = start
-	movl	40(%rax), %eax      #                                                   |       jmp	.L5
-	movl	%eax, -36(%rbp)		# auto kernel_size = __task->kernel_size;           |   .L12:    
-                                # -36(%rbp) = kernel_size                           |       xorl    %e13, %e13          # %e13 = y = 0
-                                #                                                   |       jmp .L6
-	movl	$0, -72(%rbp)		# int convolute = 0;                                |   .L11:
-                                # -72(%rbp) = convolute                             |       xorl    %e14, %e14          # %e14 = kx = 0
-                                #                                                   |       jmp	.L7
-	movl	-52(%rbp), %eax		# %eax = start                                      |   .L10:
-	movl	%eax, -68(%rbp)		# auto x = start;	// Counter 'x'                  |       xorl    %e15, %e15          # %e15 = ky = 0
-                                # -68(%rbp) = x                                     |       jmp .L8
-	jmp	.L5                     #                                                   |   .L9:
-.L12:                           #                                                   |       movl    %e12, %eax          # %eax = x 
-	movl	$0, -64(%rbp)		# auto y = 0;		// Counter 'y'                  |       addl    %e14, %eax          # %eax = x + kx
-                                # -64(%rbp) = y                                     |       imull	-40(%rbp), %eax		# %eax = (x + kx) * in_size_x
-	jmp	.L6                     #                                                   |       movl	%e13, %ecx		    # %ecx = y
-.L11:                           #                                                   |       movl	%e15, %edx  		# %edx = ky
-	movl	$0, -60(%rbp)		# auto kx = 0;		// Counter 'kx'                 |                                   # Previously it was movl -0x38(%rbp),%edx
-                                # -60(%rbp) = kx                                    |                                   # (8,32% out of the total overhead)
-	jmp	.L7                     #                                                   |       addl	%ecx, %edx			# %edx = y + ky
-.L10:                           #                                                   |       addl	%edx, %eax			# %eax = (x + kx) * in_size_x + (y +ky)
-	movl	$0, -56(%rbp)		# auto ky = 0;		// Counter 'ky'                 |       cltq
-                                # -56(%rbp) = ky                                    |       leaq	0(,%rax,4), %rdx	# %rdx = %rax * 4
-	jmp	.L8                     #                                                   |       movq	-8(%rbp), %rax		# %rax = &input[0]
-.L9:                            #                                                   |       addq	%rdx, %rax          # %rax = &input[(x + kx) * in_size_x + (y + ky)]
-	movl	-68(%rbp), %edx		# %edx = x                                          |       movl	(%rax), %edx		# %edx = input[(x + kx) * in_size_x + (y + ky)]
-	movl	-60(%rbp), %eax		# %eax = kx                                         |       movl	%e14, %eax	    	# %eax = kx
-	addl	%edx, %eax			# %eax = x + kx                                     |                                   # Previously it was movl -0x3c(%rbp),%eax
-	imull	-40(%rbp), %eax		# %eax = (x + kx) * in_size_x                       |                                   # (38,67% out of the total overhead)
-	movl	-64(%rbp), %ecx		# %ecx = y                                          |       imull	-36(%rbp), %eax		# %eax = kx * kernel_size
-	movl	-56(%rbp), %edx		# %edx = ky                                         |       movl	%eax, %ecx			# %ecx = kx * kernel_size
-	addl	%ecx, %edx			# %edx = y + ky                                     |       movl	%e15, %eax  		# %eax = ky
-	addl	%edx, %eax			# %eax = (x + kx) * in_size_x + (y +ky)             |                                   # Previously it was movl -0x38(%rbp),%eax
-	cltq						# %rax = convert long to quad %eax                  |       addl	%ecx, %eax			# %eax = kx * kernel_size + ky
-                                #                                                   |       cltq
-	leaq	0(,%rax,4), %rdx	# %rdx = %rax * 4	                                |       leaq	0(,%rax,4), %rcx	# rcx = %rax * 4
-	movq	-8(%rbp), %rax		# %rax = &input[0]                                  |       movq	-16(%rbp), %rax		# %rax = &kernel[0]
-	addq	%rdx, %rax			# %rax = &input[(x + kx) * in_size_x + (y + ky)]    |       addq	%rcx, %rax			# %rax = &kernel[kx * kernel_size + ky]
-	movl	(%rax), %edx		# %edx = input[(x + kx) * in_size_x + (y + ky)]     |       movl	(%rax), %eax		# %eax = kernel[kx * kernel_size + ky]
-                                #                                                   |       imull	%edx, %eax          # %eax = input[(x + kx) * in_size_x + (y + ky)]
-	movl	-60(%rbp), %eax		# %eax = kx                                         |                                   #        * kernel[kx * kernel_size + ky]
-	imull	-36(%rbp), %eax		# %eax = kx * kernel_size                           |       addl	%eax, %ebx          # %ebx += %eax (convolute += %eax)
-	movl	%eax, %ecx			# %ecx = kx * kernel_size                           |                                   # Previously it was addl %eax,-72(%rbp)
-	movl	-56(%rbp), %eax		# %eax = ky                                         |                                   # (5,49% out of the total overhead)
-	addl	%ecx, %eax			# %eax = kx * kernel_size + ky                      |       addl    $1, %e15            # ky++
-	cltq						# %rax = convert long to quad %eax                  |                                   # Previously it was addl $1,-56(%rbp)
-	leaq	0(,%rax,4), %rcx	# rcx = %rax * 4                                    |                                   # (18.56% out of the total overhead)
-	movq	-16(%rbp), %rax		# %rax = &kernel[0]                                 |   .L8:
-	addq	%rcx, %rax			# %rax = &kernel[kx * kernel_size + ky]             |       cmpl	-36(%rbp), %e15		# ky < kernel_size
-	movl	(%rax), %eax		# %eax = kernel[kx * kernel_size + ky]              |       jl	.L9 
-                                #                                                   |       addl	$1, %e14    		# kx++
-	imull	%edx, %eax			# %eax = input[(x + kx) * in_size_x + (y + ky)]     |                                   # Previously it was addl $1,-60(%rbp)
-                                #        * kernel[kx * kernel_size + ky]            |   .L7:
-	addl	%eax, -72(%rbp)		# convolute = convolute                             |       cmpl	-36(%rbp), %e14		# kx < kernel_size
-                                #   + (input[(x + kx) * in_size_x + (y + ky)]       |       jl	.L10
-                                #      * kernel[kx * kernel_size + ky]);            |       movl	%e12, %eax  		# %eax = x
-	addl	$1, -56(%rbp)		# ky++                                              |       imull	-44(%rbp), %eax		# %eax = x * out_size_y
-.L8:                            #                                                   |       movl	%eax, %edx			# %edx = x * out_size_y
-	movl	-56(%rbp), %eax		# %eax = ky                                         |       movl	%e13, %eax  		# %eax = y
-	cmpl	-36(%rbp), %eax		# ky < kernel_size                                  |                                   # Previously it was movl -64(%rbp),%eax
-	jl	.L9                     #                                                   |       addl	%edx, %eax			# %eax = x * out_size_y + y
-	addl	$1, -60(%rbp)		# kx++                                              |       cltq	
-.L7:                            #                                                   |       leaq	0(,%rax,4), %rdx	# %rdx = %rax * 4
-	movl	-60(%rbp), %eax		# %eax = kx                                         |       movq	-24(%rbp), %rax		# %rax = &output[0]
-	cmpl	-36(%rbp), %eax		# kx < kernel_size                                  |       addq	%rax, %rdx			# %rdx = &output[x * out_size_y + y]
-	jl	.L10                    #                                                   |       movl	%ebx, (%rdx)		# output[x * out_size_y + y] = convolute;
-	movl	-68(%rbp), %eax		# %eax = x                                          |                                   # Previously it was movl -72(%rbp), %eax
-	imull	-44(%rbp), %eax		# %eax = x * out_size_y                             |                                   #                   movl %eax, (%rdx)
-	movl	%eax, %edx			# %edx = x * out_size_y                             |       xorl    %ebx, %ebx          # convolute = 0
-	movl	-64(%rbp), %eax		# %eax = y                                          |       addl	$1, %e13    		# y++
-	addl	%edx, %eax			# %eax = x * out_size_y + y                         |                                   # Previously it was addl $1,-64(%rbp)
-	cltq						# %rax = convert long to quad %eax                  |   .L6:
-	leaq	0(,%rax,4), %rdx	# %rdx = (x * out_size_y + y) * sizeof(int)         |       cmpl	-44(%rbp), %e13		# y < out_size_y
-	movq	-24(%rbp), %rax		# %rax = &output[0]                                 |       jl      .L11
-	addq	%rax, %rdx			# %rdx = &output[x * out_size_y + y]                |       addl	$1, %e12    		# x++
-	movl	-72(%rbp), %eax		# %eax = convolute                                  |                                   # Previously it was addl $1,-68(%rbp)
-	movl	%eax, (%rdx)		# output[x * out_size_y + y] = convolute;           |   .L5:
-	movl	$0, -72(%rbp)		# convolute = 0;                                    |       cmpl	-48(%rbp), %e12     # x < end
-	addl	$1, -64(%rbp)		# y++                                               |       jl	.L12
-.L6:                            #                                                   |       popq %r15
-	movl	-64(%rbp), %eax		# %eax = y                                          |       popq %r14
-	cmpl	-44(%rbp), %eax		# y < out_size_y                                    |       popq %r13
-	jl	.L11                    #                                                   |       popq %r12
-	addl	$1, -68(%rbp)		# x++                                               |       popq %rbx
-.L5:                            #                                                   |       movq %rbp, %rsp 
-	movl	-68(%rbp), %eax		# %eax = x                                          |       popq %rbp
-	cmpl	-48(%rbp), %eax     # x < end                                           |       .cfi_def_cfa 7, 8
-	jl	.L12                    #                                                   |       ret
-	nop                         #                                                   |       .cfi_endproc 
-	nop                         #                                                   |
-	popq	%rbp                #                                                   |
-	.cfi_def_cfa 7, 8           # ABI standard epilogue                             |    
-	ret                         #                                                   |
-	.cfi_endproc                #                                                   |
+	.cfi_startproc
+	endbr64
+	pushq	%rbp
+	.cfi_def_cfa_offset 16
+	.cfi_offset 6, -16
+	movq	%rsp, %rbp
+	.cfi_def_cfa_register 6
+
+	movq	%rdi, -88(%rbp)
+	movq	-88(%rbp), %rax	
+	movq	%rax, -32(%rbp)		# struct task *__task = (struct task *)argument; 
+                                # -32(%rbp) = __task
+	movq	-32(%rbp), %rax
+	movq	(%rax), %rax
+	movq	%rax, -24(%rbp)		# auto output = __task->output;
+                                # -24(%rbp) = output
+	movq	-32(%rbp), %rax		
+	movq	16(%rax), %rax
+	movq	%rax, -16(%rbp)		# auto kernel = __task->kernel;
+                                # -16(%rbp) = kernel
+	movq	-32(%rbp), %rax
+	movq	8(%rax), %rax
+	movq	%rax, -8(%rbp)		# auto input = __task->input;
+                                # -8(%rbp) = input
+	movq	-32(%rbp), %rax
+	movl	24(%rax), %eax
+	movl	%eax, -52(%rbp)		# auto start = __task->start_row;
+                                # -52(%rbp) = start
+	movq	-32(%rbp), %rax
+	movl	28(%rax), %eax
+	movl	%eax, -48(%rbp)		# auto end = __task->end_row;
+                                # -48(%rbp) = end
+	movq	-32(%rbp), %rax
+	movl	32(%rax), %eax
+	movl	%eax, -44(%rbp)		# auto out_size_y  = __task->output_columns;
+                                # -44(%rbp) = out_size_y
+	movq	-32(%rbp), %rax
+	movl	36(%rax), %eax
+	movl	%eax, -40(%rbp)		# auto in_size_x   = __task->input_rows;
+                                # -40(%rbp) = in_size_x
+	movq	-32(%rbp), %rax
+	movl	40(%rax), %eax
+	movl	%eax, -36(%rbp)		# auto kernel_size = __task->kernel_size;
+                                # -36(%rbp) = kernel_size
+	movl	$0, -72(%rbp)		# int convolute = 0;
+
+	movl	-52(%rbp), %eax		# %eax = start
+	movl	%eax, -68(%rbp)		# auto x = start;
+	jmp	.L5
+.L12:
+	movl	$0, -64(%rbp)		# auto y = 0;
+	jmp	.L6
+.L11:
+	movl	$0, -60(%rbp)		# auto kx = 0;
+	jmp	.L7
+.L10:
+	movl	$0, -56(%rbp)		# auto ky = 0;
+	jmp	.L8
+.L9:
+	movl	-68(%rbp), %edx		# %edx = x
+	movl	-60(%rbp), %eax		# %eax = kx
+	addl	%edx, %eax			# %eax = x + kx
+	imull	-40(%rbp), %eax		# %eax = (x + kx) * in_size_x
+	movl	-64(%rbp), %ecx		# %ecx = y
+	movl	-56(%rbp), %edx		# %edx = ky
+	addl	%ecx, %edx			# %edx = y + ky
+	addl	%edx, %eax			# %eax = (x + kx) * in_size_x + (y +ky)
+	cltq						# %rax = convert long to quad %eax
+
+	leaq	0(,%rax,4), %rdx	# %rdx = %rax * 4	// We can "interpret" this instruction as
+								#					// the following: ((x + kx) * in_size_x + (y + ky)) * sizeof(int)	
+
+	movq	-8(%rbp), %rax		# %rax = &input[0]  // Since input is a pointer, this instruction 
+								#               	// is effectively loading the address of the 
+								#               	// 1-st element of the input image.
+	
+	addq	%rdx, %rax			# %rax = &input[0] + ((x + kx) * in_size_x + (y + ky)) * sizeof(int)
+	movl	(%rax), %edx		# %edx = *(&input[0] + ((x + kx) * in_size_x + (y + ky)) * sizeof(int)) = input[(x + kx) * in_size_x + (y + ky)]
+	
+	movl	-60(%rbp), %eax		# %eax = kx
+	imull	-36(%rbp), %eax		# %eax = kx * kernel_size
+	movl	%eax, %ecx			# %ecx = kx * kernel_size
+	movl	-56(%rbp), %eax		# %eax = ky
+	addl	%ecx, %eax			# %eax = kx * kernel_size + ky
+	cltq						# %rax = convert long to quad %eax
+	leaq	0(,%rax,4), %rcx	# rcx = %rax * 4	// Same as above: (kx * kernel_size + ky) * sizeof(int)
+	movq	-16(%rbp), %rax		# %rax = &kernel[0]
+	addq	%rcx, %rax			# %rax = &kernel[0] + (kx * kernel_size + ky) * sizeof(int)
+	movl	(%rax), %eax		# %eax = *(&kernel[0] + (kx * kernel_size + ky) * sizeof(int)) = kernel[kx * kernel_size + ky]
+	
+	imull	%edx, %eax			# %eax = input[(x + kx) * in_size_x + (y + ky)] * kernel[kx * kernel_size + ky]
+	addl	%eax, -72(%rbp)		# convolute += (input[(x + kx) * in_size_x + (y + ky)] * kernel[kx * kernel_size + ky]);
+	
+	addl	$1, -56(%rbp)		# ky++
+.L8:
+	movl	-56(%rbp), %eax		# %eax = ky
+	cmpl	-36(%rbp), %eax		# ky < kernel_size
+	jl	.L9
+	addl	$1, -60(%rbp)		# kx++
+.L7:
+	movl	-60(%rbp), %eax		# %eax = kx
+	cmpl	-36(%rbp), %eax		# kx < kernel_size
+	jl	.L10
+	movl	-68(%rbp), %eax		# %eax = x
+	imull	-44(%rbp), %eax		# %eax = x * out_size_y
+	movl	%eax, %edx			# %edx = x * out_size_y
+	movl	-64(%rbp), %eax		# %eax = y
+	addl	%edx, %eax			# %eax = x * out_size_y + y
+	cltq						# %rax = convert long to quad %eax
+	leaq	0(,%rax,4), %rdx	# %rdx = (x * out_size_y + y) * sizeof(int)
+	movq	-24(%rbp), %rax		# %rax = &output[0]
+	addq	%rax, %rdx			# %rdx = &output[0] + (x * out_size_y + y) * sizeof(int)
+	movl	-72(%rbp), %eax		# %eax = convolute
+	movl	%eax, (%rdx)		# output[x * out_size_y + y] = convolute;
+	movl	$0, -72(%rbp)		# convolute = 0;
+	addl	$1, -64(%rbp)		# y++
+.L6:
+	movl	-64(%rbp), %eax		# %eax = y
+	cmpl	-44(%rbp), %eax		# y < out_size_y
+	jl	.L11
+	addl	$1, -68(%rbp)		# x++
+.L5:
+	movl	-68(%rbp), %eax		# %eax = x
+	cmpl	-48(%rbp), %eax     # x < end
+	jl	.L12
+	nop
+	nop
+	popq	%rbp
+	.cfi_def_cfa 7, 8
+	ret
+	.cfi_endproc
 ```
 
-Actually, the solution presented above has some errors (we cannot use %e12, %e13, %e14 and %e15 so we are forced to use %r12, %r13, %r14 and %r15). `convolute_opt.s` should be correct:
+### Optimizations:
+__task will not be used before the inizialization of variables:
+  - output, input, kernel
+  - start, end
+  - out_size_y, in_size_x, kernel_size
+
+Also, we can use registers to hold variables (instead of allocating stack memory):
+  - %ebx = convolute     
+  - %r12 = x
+  - %r13 = y
+  - %r14 = kx
+  - %r15 = ky
 
 ```assembly
 # convolute_opt.s
