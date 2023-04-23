@@ -48,8 +48,9 @@
 //#define SEQ
 //#define THREAD
 #define PTHREAD
+#define FALSE_SHARING
 
-#define OPT_L1
+//#define OPT_L1
 
 struct data
 {

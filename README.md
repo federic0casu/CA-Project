@@ -693,3 +693,195 @@ $ sudo perf stat -r 30 -e cache-references,cache-misses ./conv image.txt kernel.
 ```
 
 In the first simulation we obtained 1.768.478 cache misses. Now we have just obtained 470.948 cache misses: not so bad.
+
+
+## Scheduler anlisys with `perf`
+
+Sometimes it can be worth spending some time figuring out how our multithread application exploits CPU resources (physical threads). The `perf sched` subcommand provides a number of tools for analyzing kernel CPU scheduler behaviour.
+
+2 threads: 
+
+```console
+$ sudo perf sched record ./conv image.txt kernel.txt 0 2
+$ sudo perf sched map > out.txt
+$ cat out.txt
+
+[...]
+ 
+  *.   I0  .   M0  .   .   .   .    11821.565211 secs 
+   .   I0  .   M0  .   .  *P0  .    11821.565417 secs P0 => budgie-wm:cs0:1567
+   .   I0  .  *.   .   .   P0  .    11821.565427 secs 
+   .  *Q0  .   .   .   .   P0  .    11821.565484 secs Q0 => gfx:850
+   .   Q0  .  *M0  .   .   P0  .    11821.565495 secs 
+   .   Q0  .   M0  .   .  *.   .    11821.565500 secs 
+   .  *I0  .   M0  .   .   .   .    11821.565513 secs I0 => conv:18079
+  *L0  I0  .   M0  .   .   .   .    11821.565515 secs 
+   L0  I0  .  *.   .   .   .   .    11821.565522 secs 
+   L0  I0  .   .   .   .  *K0  .    11821.565586 secs 
+   L0  I0  .   .   .   .  *.   .    11821.565623 secs 
+   L0  I0  .  *M0  .   .   .   .    11821.565627 secs 
+  *.   I0  .   M0  .   .   .   .    11821.565635 secs 
+
+[...]
+
+   I0  .   .   M0  .  *.   .   .    11821.885617 secs 
+   I0  .   .   M0  .  *L0  .   .    11821.885655 secs 
+   I0  .   .   M0  .  *.   .   .    11821.885675 secs 
+   I0  .   .  *.   .   .   .   .    11821.885677 secs 
+   I0 *Q0  .   .   .   .   .   .    11821.885861 secs 
+   I0 *.   .   .   .   .   .   .    11821.885864 secs 
+   I0  .   .   .   .   .  *B2  .    11821.886138 secs B2 => conv:18081  // 1st thread: B2
+   I0  .   .  *C2  .   .   B2  .    11821.886159 secs C2 => conv:18082  // 2nd thread: C2
+  *.   .   .   C2  .   .   B2  .    11821.886160 secs 
+   .   .   .   C2  .  *O0  B2  .    11821.888082 secs 
+   .   .   .   C2  .  *.   B2  .    11821.888092 secs 
+   .   .  *Z0  C2  .   .   B2  .    11821.891775 secs 
+   .   .  *.   C2  .   .   B2  .    11821.891913 secs 
+   .   .   .   C2  .  *O0  B2  .    11821.892076 secs 
+
+[...]
+
+   N0 *Q0  .   C2  .   K0  B2  .    11821.966168 secs 
+   N0 *.   .   C2  .   K0  B2  .    11821.966180 secs 
+   N0  .   .   C2  .  *.   B2  .    11821.966222 secs 
+   N0  .   .   C2 *I0  .   B2  .    11821.966296 secs // 1st thread (B2) ends
+   N0  .   .   C2  I0  .  *.   .    11821.966308 secs 
+   N0  .   .   C2 *.   .   .   .    11821.966309 secs 
+   N0  .   .   C2  .  *L0  .   .    11821.967038 secs 
+
+
+[...]
+
+N0  .   .   C2  .  *.   .   .    11821.983755 secs 
+   N0  .   .   C2  .   .   .  *O0   11821.984131 secs 
+   N0  .   .   C2  .   .   .  *.    11821.984139 secs 
+   N0  .   .   C2 *I0  .   .   .    11821.984373 secs // 2nd thread (C2) ends
+   N0  .   .  *.   I0  .   .   .    11821.984386 secs // thread main (I0) takes control
+   N0  .   .   .   I0  .  *L0  .    11821.984508 secs 
+  *.   .   .   .   I0  .   L0  .    11821.984522 secs 
+   .   .  *S0  .   I0  .   L0  .    11821.984643 secs 
+
+[...]
+```
+
+8 threads:
+
+```console
+$ sudo perf sched record ./conv image.txt kernel.txt 0 8
+$ sudo perf sched map > out.txt
+$ cat out.txt
+  *A0                                9861.654193 secs A0 => migration/0:16
+  *.                                 9861.654217 secs .  => swapper:0
+   .  *B0                            9861.654281 secs B0 => migration/1:22
+   .  *.                             9861.654298 secs 
+   .   .  *C0                        9861.654340 secs C0 => migration/2:28
+   .   .  *.                         9861.654350 secs 
+   .   .   .  *D0                    9861.654376 secs D0 => migration/3:34
+   .   .   .  *.                     9861.654383 secs 
+   .   .   .   .  *E0                9861.654483 secs E0 => migration/4:40
+   .   .   .   .  *.                 9861.654509 secs 
+   .   .   .   .   .  *F0            9861.654570 secs F0 => migration/5:46
+   .   .   .   .   .  *.             9861.654585 secs 
+   .   .   .   .   .   .  *G0        9861.654714 secs G0 => migration/6:52
+   .   .   .   .   .   .  *.         9861.654740 secs 
+   .   .   .   .   .   .  *H0        9861.654891 secs H0 => perf-exec:17223
+   .   .   .   .   .   .  *G0        9861.654999 secs 
+   .   .   .  *H0  .   .   G0        9861.655011 secs 
+   .   .   .   H0  .   .  *.         9861.655019 secs 
+   .   .   .   H0  .   .   .  *.     9861.655060 secs 
+   .   .   .  *I0  .   .   .   .     9861.655565 secs I0 => ksoftirqd/3:35
+   .   .   .  *H0  .   .   .   .     9861.655636 secs H0 => conv:17223	     // ./conv is starting
+   .   .   .   H0  .  *J0  .   .     9861.659546 secs J0 => rcu_preempt:15
+   .   .   .   H0  .  *.   .   .     9861.659561 secs 
+   .   .   .   H0  .  *J0  .   .     9861.667561 secs 
+   .   .   .   H0  .  *.   .   .     9861.667570 secs 
+   .   .   .  *I0  .   .   .   .     9861.671564 secs 
+   .   .   .  *H0  .   .   .   .     9861.671586 secs 
+   .   .   .   H0  .  *J0  .   .     9861.675547 secs  
+
+[...]
+
+   .  *K0  .   H0  .   .   .   .     9861.917653 secs 
+   .  *.   .   H0  .   .   .   .     9861.917709 secs 
+   .   .   .   H0  .   .   .  *L0    9861.919026 secs 
+   .  *K0  .   H0  .   .   .   L0    9861.919507 secs 
+   .   K0  .   H0  .   .   .  *.     9861.919523 secs 
+   .  *.   .   H0  .   .   .   .     9861.922049 secs 
+   .   .   .   H0  .   .   .  *L0    9861.922671 secs 
+   .   .   .   H0  .   .   .  *.     9861.922692 secs 
+   .   .   .   H0  .  *S0  .   .     9861.964174 secs S0 => conv:17225 // 1st thread: S0
+   .   .  *T0  H0  .   S0  .   .     9861.964222 secs T0 => conv:17228 // 2nd thread: T0
+   .   .   T0  H0 *U0  S0  .   .     9861.964251 secs U0 => conv:17229 // 3rd thread: U0
+   .   .   T0 *V0  U0  S0  .   .     9861.964324 secs V0 => conv:17232 // 4th thread: V0
+  *W0  .   T0  V0  U0  S0  .   .     9861.964403 secs W0 => conv:17231 // 5th thread: W0
+   W0 *X0  T0  V0  U0  S0  .   .     9861.964403 secs X0 => conv:17227 // 6th thread: X0
+   W0  X0  T0  V0  U0  S0 *Y0  .     9861.964406 secs Y0 => conv:17230 // 7th thread: Y0
+   W0  X0  T0  V0  U0  S0  Y0 *Z0    9861.964406 secs Z0 => conv:17226 // 8th thread: Z0
+   W0  X0  T0  V0  U0 *J0  Y0  Z0    9861.967584 secs 
+   W0  X0  T0  V0  U0 *S0  Y0  Z0    9861.967596 secs 
+   W0  X0  T0  V0  U0 *J0  Y0  Z0    9861.975577 secs 
+   W0  X0  T0  V0  U0 *S0  Y0  Z0    9861.975586 secs 
+   W0  X0  T0  V0  U0 *J0  Y0  Z0    9861.987578 secs 
+   W0  X0  T0  V0  U0 *S0  Y0  Z0    9861.987587 secs 
+   W0  X0  T0 *.   U0  S0  Y0  Z0    9861.997128 secs 
+   W0  X0 *.   .   U0  S0  Y0  Z0    9861.997274 secs 
+   W0  X0  .  *J0  U0  S0  Y0  Z0    9861.999576 secs 
+   W0  X0  .  *.   U0  S0  Y0  Z0    9861.999581 secs 
+   W0  X0 *A1  .   U0  S0  Y0  Z0    9862.003579 secs A1 => kcompactd0:70
+  *O0  X0  A1  .   U0  S0  Y0  Z0    9862.003581 secs 
+   O0  X0 *.   .   U0  S0  Y0  Z0    9862.003587 secs 
+  *W0  X0  .   .   U0  S0  Y0  Z0    9862.003609 secs 
+   W0  X0  .  *J0  U0  S0  Y0  Z0    9862.007567 secs 
+   W0  X0  .  *.   U0  S0  Y0  Z0    9862.007570 secs 
+   W0  X0 *K0  .   U0  S0  Y0  Z0    9862.010144 secs 
+   W0  X0 *.   .   U0  S0  Y0  Z0    9862.010214 secs 
+   W0  X0  .  *J0  U0  S0  Y0  Z0    9862.011579 secs 
+   W0  X0  .  *.   U0  S0  Y0  Z0    9862.011582 secs 
+   W0  X0 *K0  .   U0  S0  Y0  Z0    9862.015262 secs 
+   W0  X0 *.   .   U0  S0  Y0  Z0    9862.015324 secs 
+   W0  X0 *K0  .   U0  S0  Y0  Z0    9862.016376 secs 
+   W0  X0 *.   .   U0  S0  Y0  Z0    9862.016428 secs 
+   W0  X0  .   .   U0  S0  Y0 *L0    9862.017400 secs 
+   W0  X0 *M0  .   U0  S0  Y0  L0    9862.017437 secs 
+   W0  X0 *.   .   U0  S0  Y0  L0    9862.017457 secs 
+   W0  X0  .   .   U0  S0  Y0 *Z0    9862.017637 secs 
+   W0  X0 *K0  .   U0  S0  Y0  Z0    9862.018477 secs 
+   W0  X0 *.   .   U0  S0  Y0  Z0    9862.018501 secs 
+   W0  X0  .   .   U0  S0  Y0 *L0    9862.021156 secs 
+   W0  X0 *K0  .   U0  S0  Y0  L0    9862.021201 secs 
+   W0  X0 *.   .   U0  S0  Y0  L0    9862.021301 secs 
+   W0  X0  .   .   U0  S0  Y0 *Z0    9862.021402 secs 
+   W0  X0 *K0  .   U0  S0  Y0  Z0    9862.022346 secs 
+   W0  X0 *.   .   U0  S0  Y0  Z0    9862.022366 secs 
+  *A0  X0  .   .   U0  S0  Y0  Z0    9862.023581 secs 
+   A0  X0 *W0  .   U0  S0  Y0  Z0    9862.023595 secs 
+  *.   X0  W0  .   U0  S0  Y0  Z0    9862.023599 secs 
+   .   X0  W0  .   U0  S0 *.   Z0    9862.024051 secs 
+   .   X0  W0  .   U0  S0  .  *.     9862.024201 secs 
+   .   X0  W0  .   U0  S0  .  *L0    9862.025187 secs 
+  *N0  X0  W0  .   U0  S0  .   L0    9862.025245 secs 
+  *K0  X0  W0  .   U0  S0  .   L0    9862.025308 secs 
+  *.   X0  W0  .   U0  S0  .   L0    9862.025366 secs 
+   .   X0  W0  .   U0  S0  .  *.     9862.025436 secs 
+   .  *.   W0  .   U0  S0  .   .     9862.025601 secs 
+   .   .   W0 *J0  U0  S0  .   .     9862.027581 secs 
+   .   .   W0 *.   U0  S0  .   .     9862.027591 secs 
+   .   .  *.   .   U0  S0  .   .     9862.028495 secs 
+   .   .   .   .  *.   S0  .   .     9862.029336 secs 
+   .   .   .  *H0  .   S0  .   .     9862.029388 secs // thread main (H0) take control
+   .   .   .   H0  .  *.   .   .     9862.029389 secs // thread main (H0) ends
+   .   .   .  *.   .   .   .   .     9862.032602 secs 
+   .   .   .   .   .   .   .  *B1    9862.032604 secs B1 => perf:17220
+   .   .   .   .   .   .   .  *C1    9862.032676 secs C1 => migration/7:58
+  *B1  .   .   .   .   .   .   C1    9862.032690 secs 
+   B1  .   .   .   .   .   .  *.     9862.032690 secs 
+   B1 *B1  .   .   .   .   .   .     9862.032730 secs 
+   B1  B1 *B1  .   .   .   .   .     9862.032758 secs 
+   B1  B1  B1 *B1  .   .   .   .     9862.032782 secs 
+   B1  B1  B1  B1 *B1  .   .   .     9862.032800 secs 
+   B1  B1  B1  B1  B1 *B1  .   .     9862.032827 secs 
+   B1  B1  B1  B1  B1  B1 *B1  .     9862.032850 secs 
+   B1  B1  B1  B1  B1  B1  B1 *B1    9862.032882 secs 
+```
+
+A vertical dotted line means that the associated physical thread is idle. Basically we have just found that the application is using 7 physical threads. 
