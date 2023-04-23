@@ -546,6 +546,7 @@ Also, we can use registers to hold variables (instead of allocating stack memory
 ```assembly
 # convolute_opt.s
 
+.global _Z13convolute_optPv:
 
 _Z13convolute_optPv:                # void* convolute_opt(void*)
 .LFB2422:
