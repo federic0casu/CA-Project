@@ -5,7 +5,7 @@
 void convolution_seq(int* output, int* input, int* kernel, int input_rows, int input_columns, int kernel_size)
 {
     // This holds the convolution results.
-	int convolute;
+	//int convolute;
 
 	// Fill output matrix: rows and columns are i and j respectively.
 	for (auto x = 0; x < (input_rows - kernel_size + 1); x++)
@@ -17,13 +17,13 @@ void convolution_seq(int* output, int* input, int* kernel, int input_rows, int i
 			{
 				for (int ky = 0; ky < kernel_size; ky++)
 					// Convolute here
-					convolute += (input[(x + kx) * input_columns + (y + ky)] * kernel[kx * kernel_size + ky]);	
+					output[x*(input_columns - kernel_size + 1) + y] += (input[(x + kx) * input_columns + (y + ky)] * kernel[kx * kernel_size + ky]);	
 			}
             // Add result to output matrix.
-			output[x*(input_columns - kernel_size + 1) + y] = convolute;
+			//output[x*(input_columns - kernel_size + 1) + y] = convolute;
 			
             // Needed before we move on to the next index.
-            convolute = 0;
+            //convolute = 0;
 		}
 	}
 }

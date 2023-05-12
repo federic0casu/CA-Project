@@ -28,7 +28,7 @@ void convolute(void *argument)
     auto kernel_size = __task->kernel_size;
 
     // This holds the convolution results.
-    int convolute = 0;
+    //int convolute = 0;
 
     // Fill output matrix: rows and columns are i and j respectively.
     for (auto x = start; x < end; x++)
@@ -40,13 +40,13 @@ void convolute(void *argument)
             {
                 for (auto ky = 0; ky < kernel_size; ky++)
                     // Convolute here.
-                    convolute += (input[(x + kx) * in_size_x + (y + ky)] * kernel[kx * kernel_size + ky]);
+                    output[x * out_size_y + y] += (input[(x + kx) * in_size_x + (y + ky)] * kernel[kx * kernel_size + ky]);
             }
             // Add result to output matrix.
-            output[x * out_size_y + y] = convolute;
+            //output[x * out_size_y + y] = convolute;
 
             // Needed before we move on to the next index.
-            convolute = 0;
+            //convolute = 0;
         }
     }
 }

@@ -16,14 +16,14 @@ int set_dimensions(char* image_path, char* kernel_path, char* image_rows, char* 
     FILE* __image = fopen(image_path, "w+");
     if(!__image)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", image_path);
+        ERROR_("Couldn't open file '%s'.\n", image_path);
         return -1;
     }
 
     FILE* __kernel = fopen(kernel_path, "w+");
     if(!__kernel)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", kernel_path);
+        ERROR_("Couldn't open file '%s'.\n", kernel_path);
         fclose(__image);
         return -1;
     } 
@@ -55,25 +55,34 @@ int get_dimensions(char* image_path, char* kernel_path, int* image_rows, int* im
     FILE* __image = fopen(image_path, "r");
     if(!__image)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", image_path);
+        ERROR_("Couldn't open file '%s'.\n", image_path);
         return -1;
     }
 
     FILE* __kernel = fopen(kernel_path, "r");
     if(!__kernel)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", kernel_path);
+        ERROR_("Couldn't open file '%s'.\n", kernel_path);
         fclose(__image);
         return -1;
     }
 
-    fscanf(__image, "%d", image_rows);
-    fscanf(__image, "%d", image_columns); 
+    if((fscanf(__image, "%d", image_rows) < 1) || (fscanf(__image, "%d", image_columns) < 1))
+    {
+        ERROR_("Something goes wrong reading file '%s'.\n", image_path);
+        fclose(__image);
+        fclose(__kernel);
+        return -1;
+    } 
 
     fclose(__image);
 
-    fscanf(__kernel, "%d", kernel_rows);
-    fscanf(__kernel, "%d", kernel_columns); 
+    if((fscanf(__kernel, "%d", kernel_rows) < 1) || (fscanf(__kernel, "%d", kernel_columns) < 1))
+    {
+        ERROR_("Something goes wrong reading file '%s'.\n", kernel_path);
+        fclose(__kernel);
+        return -1;
+    }
 
     fclose(__kernel);
 
@@ -85,14 +94,14 @@ int read_file(char* image_path, char* kernel_path, int image_rows, int image_col
     FILE* __image = fopen(image_path, "r");
     if(!__image)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", image_path);
+        ERROR_("Couldn't open file '%s'.\n", image_path);
         return -1;
     }
 
     FILE* __kernel = fopen(kernel_path, "r");
     if(!__kernel)
     {
-        ERROR_("Couldn't open file '%s'. Verify if the file is located in the same directory as conv.c\n", kernel_path);
+        ERROR_("Couldn't open file '%s'.\n", kernel_path);
         fclose(__image);
         return -1;
     }
@@ -102,12 +111,24 @@ int read_file(char* image_path, char* kernel_path, int image_rows, int image_col
     {
         if(i < 2) 
         {
-            fscanf(__image, "%d", &image[i]);
+            if(fscanf(__image, "%d", &image[i]) < 1)
+            {
+                ERROR_("Something goes wrong reading file '%s'.\n", image_path);
+                fclose(__image);
+                fclose(__kernel);
+                return -1;
+            }
             i++;
             continue;
         }
 
-        fscanf(__image, "%d", &image[i-2]);
+        if(fscanf(__image, "%d", &image[i-2]) < 1)
+        {
+            ERROR_("Something goes wrong reading file '%s'.\n", image_path);
+            fclose(__image);
+            fclose(__kernel);
+            return -1;
+        }
 
         i++;
         if((i-2) == image_rows*image_columns) break;
@@ -128,12 +149,22 @@ int read_file(char* image_path, char* kernel_path, int image_rows, int image_col
     {
         if(i < 2) 
         {
-            fscanf(__kernel, "%d", &kernel[i]);
+            if(fscanf(__kernel, "%d", &kernel[i]) < 1)
+            {
+                ERROR_("Couldn't read file '%s'. Verify if the format of image file is correct.\n", kernel_path);
+                fclose(__kernel);
+                return -1; 
+            }
             i++;
             continue;
         }
 
-        fscanf(__kernel, "%d", &kernel[i-2]);
+        if(fscanf(__kernel, "%d", &kernel[i-2]) < 1)
+        {
+            ERROR_("Couldn't read file '%s'. Verify if the format of image file is correct.\n", kernel_path);
+            fclose(__kernel);
+            return -1;
+        }
 
         i++;
         if((i-2) == kernel_rows*kernel_columns) break;
