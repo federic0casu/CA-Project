@@ -1,5 +1,8 @@
 ```console
-$ perf stat -r 30 -e cycles,instructions,stalled-cycles-frontend,stalled-cycles-backend,branches,branch-misses,L1-dcache-loads,L1-dcache-load-misses,L1-icache-loads,L1-icache-load-misses,l2_cache_accesses_from_dc_misses,l2_cache_hits_from_dc_misses,l2_cache_misses_from_dc_misses,l2_cache_accesses_from_ic_misses,l2_cache_hits_from_ic_misses,l2_cache_misses_from_ic_miss ./conv input.txt kernel.txt 0 2 > /dev/null
+$ perf stat -r 30 -e cycles,instructions,stalled-cycles-frontend,stalled-cycles-backend,branches,branch-misses,
+L1-dcache-loads,L1-dcache-load-misses,L1-icache-loads,L1-icache-load-misses,l2_cache_accesses_from_dc_misses,
+l2_cache_hits_from_dc_misses,l2_cache_misses_from_dc_misses,l2_cache_accesses_from_ic_misses,l2_cache_hits_from_ic_misses,
+l2_cache_misses_from_ic_miss ./conv input.txt kernel.txt 0 2 > /dev/null
 
  Performance counter stats for './conv input.txt kernel.txt 0 2' (30 runs):
 
@@ -23,6 +26,9 @@ $ perf stat -r 30 -e cycles,instructions,stalled-cycles-frontend,stalled-cycles-
 
             2,5950 +- 0,0226 seconds time elapsed  ( +-  0,87% )
 
-$ perf record -e cycles,instructions,stalled-cycles-frontend,stalled-cycles-backend,branches,branch-misses,L1-dcache-loads,L1-dcache-load-misses,L1-icache-loads,L1-icache-load-misses,l2_cache_accesses_from_dc_misses,l2_cache_hits_from_dc_misses,l2_cache_misses_from_dc_misses,l2_cache_accesses_from_ic_misses,l2_cache_hits_from_ic_misses,l2_cache_misses_from_ic_miss ./conv input.txt kernel.txt 0 2 > /dev/null
+$ perf record -e cycles,instructions,stalled-cycles-frontend,stalled-cycles-backend,branches,branch-misses,
+L1-dcache-loads,L1-dcache-load-misses,L1-icache-loads,L1-icache-load-misses,l2_cache_accesses_from_dc_misses,
+l2_cache_hits_from_dc_misses,l2_cache_misses_from_dc_misses,l2_cache_accesses_from_ic_misses,l2_cache_hits_from_ic_misses,
+l2_cache_misses_from_ic_miss ./conv input.txt kernel.txt 0 2 > /dev/null
 $ perf report
 ```
