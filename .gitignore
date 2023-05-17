@@ -1,4 +1,4 @@
-CPU/simulation/perf.data
-CPU/simulation/input.txt
-CPU/simulation/kernel.txt
-.vscode
+/CPU/simulation/perf.data
+/CPU/simulation/input.txt
+/CPU/simulation/kernel.txt
+.vscode/
