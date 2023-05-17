@@ -47,7 +47,7 @@
 //#define SEQ
 #define PTHREAD
 
-//#define LOOP_UNROLLING
+#define LOOP_UNROLLING
 
 struct data
 {
