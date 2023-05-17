@@ -42,10 +42,10 @@
         return;                                                \
     }
 
-//#define DEBUG
+#define DEBUG
 #define SIMULATION
-#define SEQ
-//#define PTHREAD
+//#define SEQ
+#define PTHREAD
 
 //#define LOOP_UNROLLING
 

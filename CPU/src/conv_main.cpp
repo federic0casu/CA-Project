@@ -4,7 +4,7 @@ int main(int argc, char* argv[])
 { 
     if(argc != 5)
     {
-        ERROR("Incorrect number of arguments. Correct usage: ./conv input_image.txt kernel.txt {seed} {#threads} \n")
+        ERROR("Incorrect number of arguments. Correct usage: ./conv input_image.txt kernel.txt {#rep} {#threads} \n")
         exit(-1);
     }
 
@@ -78,9 +78,7 @@ int main(int argc, char* argv[])
     free(image_f.raw_data);
 
 #ifdef DEBUG
-    auto parallel_exec_time = (execution_time * 100) / execution_time_main;
-    auto serial_exec_time = 100 - parallel_exec_time;
-    printf("Total execution time: %f\n\tPercentage of serial execution time: %f\n\tPercentage of parallel execution time: %f\n", execution_time_main, serial_exec_time, parallel_exec_time);
+    printf("Execution time: %f\n", execution_time);
 #else
     char* file_name = (char*) malloc(sizeof(char)*1024);
     sprintf(file_name, "../csv/1st/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
