@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
     printf("Execution time: %f\n", execution_time);
 #else
     char* file_name = (char*) malloc(sizeof(char)*1024);
-    sprintf(file_name, "../csv/1st/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
+    sprintf(file_name, "../csv/3rd/exec_times(%dx%d_%dx%d)(%d).csv", image.rows, image.rows, kernel.rows, kernel.columns, threads);
     write_execution_time(file_name, rep, execution_time);
     free(file_name);
 #endif
