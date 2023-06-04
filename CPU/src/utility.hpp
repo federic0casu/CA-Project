@@ -42,7 +42,7 @@
         return;                                                \
     }
 
-//#define DEBUG
+#define DEBUG
 #define SIMULATION
 //#define SEQ
 #define PTHREAD

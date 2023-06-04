@@ -49,44 +49,6 @@ void convolute(void *argument)
 }
 
 extern void convolute_opt_3x3(void *argument);
-/*
-{
-    struct task *__task = (struct task *)argument;
-
-    auto output = __task->output;
-    auto input  = __task->input;
-    auto kernel = __task->kernel;
-    auto start  = __task->start_row;
-    auto end    = __task->end_row;
-
-    auto out_size_y  = __task->output_columns;
-    auto in_size_x   = __task->input_rows;
-    auto kernel_size = __task->kernel_size;
-
-    // This holds the convolution results.
-    int convolute = 0;
-
-    // Fill output matrix: rows and columns are i and j respectively.
-    for (auto x = start; x < end; x++)
-    {
-        for (auto y = 0; y < out_size_y; y++)
-        {
-            // Kernel rows and columns are kx and ky respectively.
-            for (auto kx = 0; kx < kernel_size; kx++)
-            {
-                convolute += (input[(x + kx) * in_size_x + (y + 0)] * kernel[kx * kernel_size + 0]);
-                convolute += (input[(x + kx) * in_size_x + (y + 1)] * kernel[kx * kernel_size + 1]);
-                convolute += (input[(x + kx) * in_size_x + (y + 2)] * kernel[kx * kernel_size + 2]);
-            }
-            // Add result to output matrix.
-            output[x * out_size_y + y] = convolute;
-
-            // Needed before we move on to the next index.
-            convolute = 0;
-        }
-    }
-}
-*/
 
 void convolute_opt_5x5(void *argument)
 {
