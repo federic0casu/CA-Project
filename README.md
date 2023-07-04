@@ -1,4 +1,4 @@
-# How to do a performance analisys with perf
+# How to do performance analisys with perf
 
 
 ## 1 - Install `perf`
